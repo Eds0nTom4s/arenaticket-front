@@ -9,9 +9,8 @@
     </template>
     <div class="tc-title">{{ evento.nome }}</div>
     <div class="tc-date">{{ formatDate(evento.data) }}</div>
-    <div class="tc-price">{{ formatPrice(evento.preco) }}</div>
-    <AtButton variant="primary" size="md" :disabled="evento.status !== 'disponivel'">
-      Comprar Bilhete
+    <AtButton variant="primary" size="md" :disabled="evento.status === 'esgotado'">
+      Ver Lotes / Comprar
     </AtButton>
   </AtCard>
 </template>
@@ -26,9 +25,6 @@ const props = defineProps({
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-function formatPrice(price) {
-  return price ? `Kz ${price.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}` : '';
 }
 </script>
 

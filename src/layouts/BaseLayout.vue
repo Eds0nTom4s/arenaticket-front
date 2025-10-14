@@ -130,12 +130,14 @@ const openMenu = ref(false);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
   padding: var(--space-md);
   background: var(--color-neutral-100);
   color: var(--color-primary-dark);
   font-size: var(--font-size-sm);
   box-shadow: var(--shadow-card);
+  text-align: center;
 }
 .at-version {
   opacity: 0.7;
@@ -144,7 +146,8 @@ const openMenu = ref(false);
 @media (min-width: 768px) {
   .at-footer {
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
+    gap: var(--space-md);
   }
 }
 </style>

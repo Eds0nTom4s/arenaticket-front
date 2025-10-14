@@ -9,11 +9,11 @@
         @comprar="abrirCheckout(evento)"
       />
     </div>
-    <CheckoutModal
+    <CheckoutWizard
       v-if="modalOpen"
       :evento="eventoSelecionado"
       @close="modalOpen = false"
-      @confirmar="simularCompra"
+      @confirm="simularCompra"
     />
     <AtToast v-if="toast.show" :type="toast.type">
       <template #icon>
@@ -32,7 +32,7 @@
 import { ref } from 'vue';
 import BaseLayout from '../layouts/BaseLayout.vue';
 import TicketCard from '../components/TicketCard.vue';
-import CheckoutModal from '../components/CheckoutModal.vue';
+import CheckoutWizard from '../components/CheckoutWizard.vue';
 import AtToast from '../components/AtToast.vue';
 import AtLoader from '../components/AtLoader.vue';
 import AtIcon from '../components/AtIcon.vue';
@@ -66,6 +66,7 @@ const eventos = ref([
 
 const modalOpen = ref(false);
 const eventoSelecionado = ref(null);
+const bilheteGerado = ref(null);
 const loading = ref(false);
 const toast = ref({ show: false, type: 'success', message: '' });
 
@@ -73,13 +74,37 @@ function abrirCheckout(evento) {
   eventoSelecionado.value = evento;
   modalOpen.value = true;
 }
+
+function gerarQRCode() {
+  // Simula a geração de um QR code em base64
+  const canvas = document.createElement('canvas');
+  canvas.width = 200;
+  canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, 200, 200);
+  ctx.fillStyle = '#001B33';
+  ctx.font = '14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('QR CODE', 100, 90);
+  ctx.fillText('BILHETE', 100, 110);
+  return canvas.toDataURL();
+}
+
 function simularCompra() {
   modalOpen.value = false;
   loading.value = true;
   setTimeout(() => {
     loading.value = false;
-    toast.value = { show: true, type: 'success', message: 'Compra simulada com sucesso' };
-    setTimeout(() => (toast.value.show = false), 3500);
+    // Gera um código de bilhete único
+    const codigoBilhete = `GDSE-${Math.random().toString(36).substr(2, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    bilheteGerado.value = {
+      codigo: codigoBilhete,
+      qrCode: gerarQRCode()
+    };
+    // A lógica de sucesso agora é tratada dentro do CheckoutWizard
+    // Apenas fechamos o modal principal aqui
+    modalOpen.value = false;
   }, 1800);
 }
 </script>
