@@ -1,0 +1,12 @@
+# Node
+node_modules/
+dist/
+.env
+*.log
+.cache/
+.vite/
+.DS_Store
+.idea/
+.vscode/
+*.local
+*.swp
