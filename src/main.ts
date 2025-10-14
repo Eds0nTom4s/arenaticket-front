@@ -1,2 +1,8 @@
-// Entry point do frontend ArenaTicket
-// Implementação será feita após aprovação dos documentos da Etapa 1
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+import './styles/global.css';
+
+const app = createApp(App);
+app.use(router);
+app.mount('#app');
