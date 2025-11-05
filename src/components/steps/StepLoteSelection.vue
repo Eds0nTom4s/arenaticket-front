@@ -34,34 +34,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import AtLoader from '../AtLoader.vue';
 import AtButton from '../AtButton.vue';
+import { fetchEventoDetalhes } from '../../services/api';
 
 const props = defineProps({
   eventoId: { type: String, required: true },
   modelValue: { type: String, default: null }
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'lotes-loaded']);
 
 const lotes = ref([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const selectedLoteId = ref(props.modelValue);
 
+watch(() => props.modelValue, (newValue) => {
+  selectedLoteId.value = newValue;
+});
+
 async function fetchLotes() {
   loading.value = true;
   error.value = null;
   try {
-    // Simulação de chamada API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const mockLotes = [
-      { id: 'lote-01', nome: 'Lote 1 - Pista', preco: 2500, quantidadeDisponivel: 100, fimVenda: '2025-10-20T23:59:00' },
-      { id: 'lote-02', nome: 'Lote 2 - VIP', preco: 5000, quantidadeDisponivel: 50, fimVenda: '2025-10-20T23:59:00' },
-      { id: 'lote-03', nome: 'Lote 3 - Camarote', preco: 10000, quantidadeDisponivel: 0, fimVenda: '2025-10-20T23:59:00' },
-    ];
-    lotes.value = mockLotes.filter(l => l.quantidadeDisponivel > 0);
+    const evento = await fetchEventoDetalhes(props.eventoId);
+    const now = new Date();
+    lotes.value = evento.lotes.filter(lote => {
+      const inicioVenda = new Date(lote.inicioVenda);
+      const fimVenda = new Date(lote.fimVenda);
+      return lote.quantidadeDisponivel > 0 && inicioVenda <= now && fimVenda >= now;
+    });
+    emit('lotes-loaded', lotes.value);
   } catch (e) {
     error.value = 'Não foi possível carregar os lotes. Por favor, tente novamente.';
   } finally {

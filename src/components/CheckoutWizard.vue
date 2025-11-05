@@ -12,6 +12,7 @@
         v-if="currentStep === 0"
         :evento-id="evento.id"
         v-model="selectedLoteId"
+        @lotes-loaded="handleLotesLoaded"
       />
 
       <!-- Etapa 2: Quantidade -->
@@ -97,15 +98,14 @@ const buyerInfo = ref({
 const checkoutLoading = ref(false);
 const checkoutError = ref<string | null>(null);
 const checkoutResult = ref(null);
+const availableLotes = ref([]);
 
-// Mock lotes data for now, will be fetched in StepLoteSelection
-const mockLotes = [
-  { id: 'lote-01', nome: 'Lote 1 - Pista', preco: 2500, quantidadeDisponivel: 100, fimVenda: '2025-10-20T23:59:00' },
-  { id: 'lote-02', nome: 'Lote 2 - VIP', preco: 5000, quantidadeDisponivel: 50, fimVenda: '2025-10-20T23:59:00' },
-];
+function handleLotesLoaded(lotes) {
+  availableLotes.value = lotes;
+}
 
 const selectedLote = computed(() => {
-  return mockLotes.find(lote => lote.id === selectedLoteId.value);
+  return availableLotes.value.find(lote => lote.id === selectedLoteId.value);
 });
 
 const orderSummary = computed(() => {
