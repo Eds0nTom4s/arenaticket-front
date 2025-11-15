@@ -60,9 +60,14 @@ onMounted(async () => {
     eventos.value = data.map(evento => ({
       id: evento.id,
       nome: evento.titulo,
-      data: evento.dataInicio,
+      titulo: evento.titulo,
+      data: evento.dataEvento || evento.dataInicio, // Usar dataEvento corretamente
+      dataEvento: evento.dataEvento || evento.dataInicio,
+      local: evento.local || 'A definir',
+      descricao: evento.descricao || '',
       bannerUrl: evento.bannerUrl || `https://placehold.co/600x300/001B33/FFFFFF?text=${encodeURIComponent(evento.titulo)}`,
       status: evento.abertoParaVenda ? 'disponivel' : 'esgotado',
+      abertoParaVenda: evento.abertoParaVenda,
     }));
   } catch (error) {
     toast.value = { show: true, type: 'error', message: 'Não foi possível carregar os eventos.' };

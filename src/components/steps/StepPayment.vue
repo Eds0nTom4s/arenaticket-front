@@ -8,6 +8,7 @@
       placeholder="Seu nome completo"
       required
     />
+    
     <AtInput
       id="telefone"
       label="Telefone"
@@ -17,37 +18,45 @@
       type="tel"
       required
     />
-    <div class="payment-methods">
-      <span>Método de pagamento:</span>
-      <div class="payment-buttons">
-        <AtButton
-          variant="secondary"
-          size="sm"
-          :class="{ selected: modelValue.metodo === 'GPO' }"
-          @click="update('metodo', 'GPO')"
-        >
-          Multicaixa Express
-        </AtButton>
-        <AtButton
-          variant="secondary"
-          size="sm"
-          :class="{ selected: modelValue.metodo === 'REFERENCIA' }"
-          @click="update('metodo', 'REFERENCIA')"
-        >
-          Referência ATM
-        </AtButton>
-      </div>
+    
+    <AtInput
+      id="email"
+      label="Email (opcional)"
+      :model-value="modelValue.email"
+      @update:modelValue="update('email', $event)"
+      placeholder="seu@email.com"
+      type="email"
+    />
+    
+    <!-- Novo componente de seleção de método de pagamento -->
+    <PaymentMethodSelector
+      :model-value="modelValue.metodo"
+      @update:modelValue="update('metodo', $event)"
+    />
+    
+    <!-- Validação de telefone -->
+    <div v-if="telefoneError" class="sp-error">
+      <AtIcon name="alert-circle" />
+      <span>{{ telefoneError }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import AtInput from '../AtInput.vue';
-import AtButton from '../AtButton.vue';
+import AtIcon from '../AtIcon.vue';
+import PaymentMethodSelector from '../../features/checkout/components/PaymentMethodSelector.vue';
+import { isValidAngolaTelefone } from '../../features/checkout/utils/validators';
 
 const props = defineProps({
   modelValue: {
-    type: Object as () => { nome: string; telefone: string; metodo: string },
+    type: Object as () => { 
+      nome: string; 
+      telefone: string; 
+      email?: string;
+      metodo: string 
+    },
     required: true
   }
 });
@@ -57,25 +66,39 @@ const emit = defineEmits(['update:modelValue']);
 function update(field: string, value: string) {
   emit('update:modelValue', { ...props.modelValue, [field]: value });
 }
+
+// Validação de telefone
+const telefoneError = computed(() => {
+  if (!props.modelValue.telefone) return null;
+  if (!isValidAngolaTelefone(props.modelValue.telefone)) {
+    return 'Telefone inválido. Use formato: 9XXXXXXXX';
+  }
+  return null;
+});
 </script>
 
 <style scoped>
 .step-payment {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--spacing-4, 1.5rem);
 }
-.payment-methods {
+
+.sp-error {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 1rem);
+  background: var(--color-error-light, #fee2e2);
+  border-radius: var(--radius-md, 8px);
+  border-left: 3px solid var(--color-error, #dc2626);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-error-dark, #991b1b);
 }
-.payment-buttons {
-  display: flex;
-  gap: var(--space-md);
-}
-.selected {
-  box-shadow: var(--animation-glow);
-  border: 2px solid var(--color-primary);
+
+.sp-error svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 </style>
