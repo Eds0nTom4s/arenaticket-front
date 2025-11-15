@@ -9,6 +9,7 @@ import { ref, readonly } from 'vue';
 import type { CheckoutRequest, Bilhete } from '../types/checkout.types';
 import type { PedidoBackendResponse } from '../types/pedido.types';
 import { createCheckout, validateCheckoutData } from '../services/checkoutService';
+import { normalizeBilhetes } from '../utils/normalizeBilhete';
 import { getFriendlyErrorMessage } from '../utils/validators';
 import { getPedidoBilhetes } from '../services/paymentService';
 
@@ -59,11 +60,10 @@ export function useCheckout() {
       const bilhetesDiretos: any[] | undefined = (result as any).bilhetes;
       if (bilhetesDiretos && Array.isArray(bilhetesDiretos) && bilhetesDiretos.length > 0) {
         try {
-          // Normalização simples (já tratada em paymentService ao buscar, mas aqui assumimos formato adequado)
-          bilhetes.value = bilhetesDiretos as any;
+          bilhetes.value = normalizeBilhetes(bilhetesDiretos);
           console.log('[useCheckout] Bilhetes presentes na resposta do checkout:', bilhetesDiretos.length);
         } catch (e) {
-          console.warn('[useCheckout] Falha ao aplicar bilhetes diretos, continuará fluxo padrão.', e);
+          console.warn('[useCheckout] Falha ao normalizar bilhetes diretos, continuará fluxo padrão.', e);
         }
       }
       

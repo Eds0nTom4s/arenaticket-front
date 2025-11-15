@@ -3,10 +3,8 @@
  * Consulta status e bilhetes
  */
 
-import type {
-  PaymentStatusResponse,
-  Bilhete,
-} from '../types/checkout.types';
+import type { PaymentStatusResponse, Bilhete } from '../types/checkout.types';
+import { normalizeBilhetes } from '../utils/normalizeBilhete';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1/public';
 
@@ -55,41 +53,8 @@ export async function getPedidoBilhetes(pedidoId: string): Promise<Bilhete[]> {
 
   const raw = await response.json();
   const list = Array.isArray(raw) ? raw : [raw];
-  const normalized: Bilhete[] = list.map((b: any) => {
-    const evento = b.evento && typeof b.evento === 'object' ? b.evento : {
-      titulo: b.eventoTitulo || b.eventoNome || b.titulo || b.evento || '',
-      local: b.eventoLocal || b.local || '',
-      dataEvento: b.eventoData || b.dataEvento || b.data || '',
-    };
-    const lote = b.lote && typeof b.lote === 'object' ? b.lote : {
-      nome: b.loteNome || b.nomeLote || b.lote || '',
-      preco: Number(b.preco ?? b.valor ?? b.precoUnitario ?? 0),
-    };
-    const codigoTicket: string = b.codigoTicket || b.codigo || b.code || '';
-    const codigoTicketCompact: string = (codigoTicket || '').replace(/[^A-Za-z0-9]/g, '');
-    let codigoQR: string = b.codigoQR || b.qrCode || b.qrcode || '';
-    if (codigoQR && !/^data:image\//.test(codigoQR)) {
-      // Assumir PNG por padrão se não vier com prefixo data URL
-      codigoQR = `data:image/png;base64,${codigoQR}`;
-    }
-
-    const bilhete: Bilhete = {
-      id: String(b.id || b.bilheteId || b.ticketId || codigoTicket || Math.random().toString(36).slice(2)),
-      codigoTicket,
-      codigoTicketCompact,
-      codigoQR,
-      status: (b.status || 'VALID') as Bilhete['status'],
-      compradorNome: b.compradorNome || b.nomeComprador || '',
-      compradorTelefone: b.compradorTelefone || b.telefoneComprador || '',
-      evento,
-      lote,
-      vendidoEm: b.vendidoEm || b.dataVenda || b.createdAt || undefined,
-    };
-    return bilhete;
-  });
-
+  const normalized = normalizeBilhetes(list);
   console.log('[PaymentService] Bilhetes obtidos (normalizados):', normalized.length);
-
   return normalized;
 }
 

@@ -23,7 +23,12 @@
         </div>
 
         <div class="td-ticket-qr">
-          <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" />
+          <template v-if="bilhete.codigoQR">
+            <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" />
+          </template>
+          <template v-else>
+            <div class="td-qr-skeleton">QR não disponível</div>
+          </template>
         </div>
 
         <div class="td-ticket-code">
@@ -65,10 +70,17 @@
             variant="secondary"
             size="sm"
             @click="downloadTicket(bilhete)"
-            fullWidth
           >
             <AtIcon name="download" />
-            Baixar Bilhete
+            Baixar
+          </AtButton>
+          <AtButton
+            variant="primary"
+            size="sm"
+            @click="shareWhatsApp(bilhete)"
+          >
+            <AtIcon name="share" />
+            WhatsApp
           </AtButton>
         </div>
       </div>
@@ -194,29 +206,27 @@ const downloadTicket = (bilhete: Bilhete) => {
   ctx.textAlign = 'center';
   ctx.fillText(`Código: ${bilhete.codigoTicket}`, canvas.width / 2, 300);
 
-  // QR Code (se disponível)
+  // Função para finalizar e baixar
+  const finalizar = () => {
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Juntos Pela Vitória', canvas.width / 2, canvas.height - 30);
+    downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
+  };
+
   if (bilhete.codigoQR) {
     const img = new Image();
     img.onload = () => {
       ctx.drawImage(img, canvas.width / 2 - 100, 330, 200, 200);
-      
-      // Rodapé
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Juntos Pela Vitória', canvas.width / 2, canvas.height - 30);
-      
-      // Download
-      downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
+      finalizar();
+    };
+    img.onerror = () => {
+      console.warn('Falha ao carregar QR; baixando sem imagem.');
+      finalizar();
     };
     img.src = bilhete.codigoQR;
   } else {
-    // Rodapé
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Juntos Pela Vitória', canvas.width / 2, canvas.height - 30);
-    
-    // Download
-    downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
+    finalizar();
   }
 };
 
@@ -232,6 +242,13 @@ const downloadCanvas = (canvas: HTMLCanvasElement, filename: string) => {
     
     URL.revokeObjectURL(url);
   });
+};
+
+const shareWhatsApp = (bilhete: Bilhete) => {
+  const eventoTitulo = bilhete.evento?.titulo || 'Evento';
+  const msg = `Bilhete confirmado!\nEvento: ${eventoTitulo}\nCódigo: ${bilhete.codigoTicket}\nApresente o QR na entrada.`;
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 };
 </script>
 
@@ -378,6 +395,31 @@ const downloadCanvas = (canvas: HTMLCanvasElement, filename: string) => {
   flex-direction: column;
   gap: var(--spacing-2, 0.5rem);
   margin-bottom: var(--spacing-4, 1.5rem);
+}
+
+.td-ticket-actions {
+  display: flex;
+  gap: var(--spacing-2, 0.5rem);
+  justify-content: flex-end;
+  margin-top: var(--spacing-2, 0.5rem);
+}
+
+.td-ticket-actions > * {
+  flex: 0 0 auto;
+}
+
+.td-qr-skeleton {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(45deg,#f3f4f6,#f3f4f6 10px,#e5e7eb 10px,#e5e7eb 20px);
+  border: 2px dashed var(--color-border, #e5e5e5);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
 }
 
 .td-detail-row {
