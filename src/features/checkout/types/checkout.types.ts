@@ -39,18 +39,37 @@ export interface PagamentoInfo {
 export interface Pedido {
   id: string;
   clientRequestId: string;
-  referencia: string;
+  referencia?: string;
   status: StatusPedido;
-  valorTotal: number;
-  pagamento: PagamentoInfo;
+  valorTotal?: number;
+  total?: number; // Backend usa 'total' ao invés de 'valorTotal'
+  pagamento?: PagamentoInfo;
+  compradorNome: string;
+  compradorTelefone: string;
+  compradorEmail?: string | null;
+  paymentProvider?: string;
+  paymentId?: string | null;
+  reservaId?: string;
 }
 
 /**
  * Response completa do checkout
+ * NOTA: Backend v1.2.0 retorna dados diretamente, não em wrapper 'pedido'
  */
 export interface CheckoutResponse {
-  mensagem: string;
-  pedido: Pedido;
+  mensagem?: string;
+  pedido?: Pedido;
+  // Campos diretos (formato real do backend)
+  id?: string;
+  clientRequestId?: string;
+  status?: StatusPedido;
+  total?: number;
+  compradorNome?: string;
+  compradorTelefone?: string;
+  compradorEmail?: string | null;
+  paymentProvider?: string;
+  paymentId?: string | null;
+  reservaId?: string;
 }
 
 /**

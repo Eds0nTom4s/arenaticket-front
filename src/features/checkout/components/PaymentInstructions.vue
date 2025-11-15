@@ -1,7 +1,16 @@
 <template>
   <div class="payment-instructions">
-    <!-- GPO - Multicaixa Express -->
-    <div v-if="pedido.pedido.pagamento.metodoPagamento === 'GPO'" class="pi-gpo">
+    <!-- ✨ NOVO v1.2.0: Verificar se pagamento foi instantâneo (GPO PAID) -->
+    <div v-if="isPaid" class="pi-instant-success">
+      <div class="pi-success-animation">
+        <AtIcon name="check-circle" class="pi-success-icon" />
+      </div>
+      <h3>🎉 Pagamento Confirmado Instantaneamente!</h3>
+      <p>Seus bilhetes estão prontos abaixo.</p>
+    </div>
+
+    <!-- GPO - Multicaixa Express (PENDING) -->
+    <div v-else-if="isGPO" class="pi-gpo">
       <div class="pi-header">
         <AtIcon name="mobile" class="pi-header-icon" />
         <h3>Pagamento via Multicaixa Express</h3>
@@ -21,13 +30,13 @@
         </div>
 
         <div class="pi-reference">
-          <label>Referência:</label>
+          <label>ID do Pedido:</label>
           <div class="pi-reference-value">
-            <strong>{{ pedido.pedido.pagamento.referencia }}</strong>
+            <strong>{{ pedido.clientRequestId }}</strong>
             <button
               type="button"
               class="pi-copy-btn"
-              @click="copyToClipboard(pedido.pedido.pagamento.referencia)"
+              @click="copyToClipboard(pedido.clientRequestId)"
               :title="copied ? 'Copiado!' : 'Copiar'"
             >
               <AtIcon :name="copied ? 'check' : 'copy'" />
@@ -37,7 +46,7 @@
 
         <div class="pi-amount">
           <label>Valor:</label>
-          <strong>{{ formatKwanza(pedido.pedido.valorTotal) }}</strong>
+          <strong>{{ formatKwanza(pedido.total) }}</strong>
         </div>
       </div>
 
@@ -62,28 +71,13 @@
 
         <div class="pi-details">
           <div class="pi-detail-item">
-            <label>Entidade:</label>
-            <div class="pi-detail-value">
-              <strong>{{ pedido.pedido.pagamento.entidade }}</strong>
-              <button
-                type="button"
-                class="pi-copy-btn"
-                @click="copyToClipboard(pedido.pedido.pagamento.entidade || '')"
-                :title="copiedEntity ? 'Copiado!' : 'Copiar'"
-              >
-                <AtIcon :name="copiedEntity ? 'check' : 'copy'" />
-              </button>
-            </div>
-          </div>
-
-          <div class="pi-detail-item">
             <label>Referência:</label>
             <div class="pi-detail-value">
-              <strong>{{ pedido.pedido.pagamento.referencia }}</strong>
+              <strong>{{ pedido.clientRequestId }}</strong>
               <button
                 type="button"
                 class="pi-copy-btn"
-                @click="copyToClipboard(pedido.pedido.pagamento.referencia)"
+                @click="copyToClipboard(pedido.clientRequestId)"
                 :title="copied ? 'Copiado!' : 'Copiar'"
               >
                 <AtIcon :name="copied ? 'check' : 'copy'" />
@@ -94,7 +88,7 @@
           <div class="pi-detail-item">
             <label>Valor:</label>
             <strong class="pi-amount-value">
-              {{ formatKwanza(pedido.pedido.valorTotal) }}
+              {{ formatKwanza(pedido.total) }}
             </strong>
           </div>
         </div>
@@ -131,35 +125,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AtIcon from '../../../components/AtIcon.vue';
 import AtLoader from '../../../components/AtLoader.vue';
-import type { CheckoutResponse } from '../types/checkout.types';
 import { formatKwanza, formatTelefone } from '../utils/validators';
+import type { PedidoBackendResponse } from '../types/pedido.types';
 
 const props = defineProps<{
-  pedido: CheckoutResponse;
+  pedido: PedidoBackendResponse;
   telefone: string;
+  metodoPagamento?: 'GPO' | 'REFERENCIA';
 }>();
 
 const copied = ref(false);
-const copiedEntity = ref(false);
+
+// Computed para verificar status e método
+const isPaid = computed(() => props.pedido.status === 'PAID');
+const isGPO = computed(() => props.metodoPagamento === 'GPO');
 
 const copyToClipboard = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
-    
-    if (text === props.pedido.pedido.pagamento.entidade) {
-      copiedEntity.value = true;
-      setTimeout(() => {
-        copiedEntity.value = false;
-      }, 2000);
-    } else {
-      copied.value = true;
-      setTimeout(() => {
-        copied.value = false;
-      }, 2000);
-    }
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
   } catch (err) {
     console.error('Erro ao copiar:', err);
   }
@@ -205,6 +195,52 @@ const copyToClipboard = async (text: string) => {
 }
 
 /* GPO específico */
+.pi-instant-success {
+  text-align: center;
+  padding: var(--spacing-6, 2rem) var(--spacing-4, 1.5rem);
+  background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+  border-radius: var(--radius-lg, 12px);
+  border: 2px solid var(--color-success, #16a34a);
+}
+
+.pi-success-animation {
+  margin-bottom: var(--spacing-3, 1rem);
+}
+
+.pi-success-icon {
+  width: 80px;
+  height: 80px;
+  color: var(--color-success, #16a34a);
+  animation: success-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes success-bounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pi-instant-success h3 {
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: 700;
+  color: var(--color-success-dark, #15803d);
+  margin: 0 0 var(--spacing-2, 0.5rem) 0;
+}
+
+.pi-instant-success p {
+  font-size: var(--font-size-base, 1rem);
+  color: var(--color-text-secondary, #666);
+  margin: 0;
+}
+
 .pi-qr-section {
   display: flex;
   justify-content: center;

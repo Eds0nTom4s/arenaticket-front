@@ -197,8 +197,11 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
 
 /**
  * Timeout recomendado por método de pagamento
+ * 
+ * v1.2.0: GPO não precisa mais de polling (confirmação instantânea)
+ * mas timeout mantido para casos de fallback
  */
 export const PAYMENT_TIMEOUTS = {
-  GPO: 180000, // 3 minutos (pagamento instantâneo)
+  GPO: 180000, // 3 minutos (apenas fallback - pagamento é instantâneo)
   REFERENCIA: 600000, // 10 minutos (pagamento assíncrono)
 } as const;

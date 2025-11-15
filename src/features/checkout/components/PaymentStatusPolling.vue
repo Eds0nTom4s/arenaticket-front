@@ -1,15 +1,18 @@
 <template>
   <div class="payment-status-polling">
-    <PaymentInstructions
-      v-if="!isPaid"
-      :pedido="pedido"
-      :telefone="telefone"
-    />
-
+    <!-- ✨ NOVO v1.2.0: Exibir bilhetes imediatamente se GPO pago instantaneamente -->
     <TicketDisplay
       v-if="isPaid && bilhetes.length > 0"
       :bilhetes="bilhetes"
       @close="$emit('close')"
+    />
+
+    <!-- Instruções de pagamento e aguardando confirmação -->
+    <PaymentInstructions
+      v-else-if="!isPaid"
+      :pedido="pedido"
+      :telefone="telefone"
+      :metodo-pagamento="metodoPagamento"
     />
 
     <!-- Erro -->
@@ -33,12 +36,15 @@ import AtButton from '../../../components/AtButton.vue';
 import PaymentInstructions from './PaymentInstructions.vue';
 import TicketDisplay from './TicketDisplay.vue';
 import { usePaymentStatus, PAYMENT_TIMEOUTS } from '../hooks/usePaymentStatus';
-import type { CheckoutResponse, MetodoPagamento } from '../types/checkout.types';
+import type { MetodoPagamento } from '../types/checkout.types';
+import type { PedidoBackendResponse } from '../types/pedido.types';
 
 const props = defineProps<{
-  pedido: CheckoutResponse;
+  pedido: PedidoBackendResponse;
   telefone: string;
   metodoPagamento: MetodoPagamento;
+  /** ✨ NOVO v1.2.0: Bilhetes pré-carregados (GPO instantâneo) */
+  bilhetesIniciais?: any[];
 }>();
 
 const emit = defineEmits<{
@@ -46,6 +52,11 @@ const emit = defineEmits<{
   error: [error: Error];
   close: [];
 }>();
+
+// ✨ NOVO v1.2.0: Se já temos bilhetes, pagamento foi instantâneo (GPO)
+const isPaidInstantly = computed(() => 
+  props.bilhetesIniciais && props.bilhetesIniciais.length > 0
+);
 
 // Determinar timeout baseado no método de pagamento
 const timeout = props.metodoPagamento === 'GPO' 
@@ -55,7 +66,7 @@ const timeout = props.metodoPagamento === 'GPO'
 // Hook de polling
 const {
   status,
-  bilhetes,
+  bilhetes: bilhetesPolling,
   isLoading,
   error,
   startPolling,
@@ -76,16 +87,37 @@ const {
   },
 });
 
-const isPaid = computed(() => status.value === 'PAID');
+const isPaid = computed(() => {
+  // ✨ NOVO v1.2.0: Considerar pago se temos bilhetes iniciais (GPO instantâneo)
+  if (isPaidInstantly.value) {
+    return true;
+  }
+  return status.value === 'PAID';
+});
+
+// Usar bilhetes iniciais se disponíveis, senão os do polling
+const bilhetes = computed(() => {
+  if (props.bilhetesIniciais && props.bilhetesIniciais.length > 0) {
+    return props.bilhetesIniciais;
+  }
+  return [...bilhetesPolling.value]; // Criar cópia mutável
+});
 
 const retry = () => {
-  startPolling(props.pedido.pedido.id);
+  startPolling(props.pedido.id);
 };
 
-// Iniciar polling ao montar
+// Iniciar polling ao montar (pular se GPO já pago)
 onMounted(() => {
-  console.log('[PaymentStatusPolling] Iniciando polling para pedido:', props.pedido.pedido.id);
-  startPolling(props.pedido.pedido.id);
+  // ✨ NOVO v1.2.0: Pular polling se pagamento GPO já foi confirmado
+  if (isPaidInstantly.value) {
+    console.log('[PaymentStatusPolling] 🎉 Pagamento GPO instantâneo - pulando polling');
+    emit('complete', props.bilhetesIniciais!);
+    return;
+  }
+
+  console.log('[PaymentStatusPolling] Iniciando polling para pedido:', props.pedido.id);
+  startPolling(props.pedido.id);
 });
 </script>
 

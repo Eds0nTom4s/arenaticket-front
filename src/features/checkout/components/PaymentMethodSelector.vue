@@ -16,8 +16,8 @@
         </div>
         <div class="pms-option-content">
           <h4>Multicaixa Express</h4>
-          <p>Pagamento instantâneo via app</p>
-          <span class="pms-badge">Recomendado</span>
+          <p>✨ Confirmação instantânea via app</p>
+          <span class="pms-badge pms-badge--instant">⚡ Instantâneo</span>
         </div>
         <div class="pms-option-check">
           <AtIcon v-if="modelValue === 'GPO'" name="check-circle" />
@@ -48,8 +48,8 @@
     <div v-if="modelValue" class="pms-info">
       <AtIcon name="info" />
       <p v-if="modelValue === 'GPO'">
-        Você será redirecionado para o aplicativo Multicaixa Express para confirmar o pagamento.
-        A confirmação é instantânea.
+        <strong>✨ Novo:</strong> O pagamento via Multicaixa Express é processado instantaneamente!
+        Seus bilhetes serão gerados automaticamente após a confirmação no app.
       </p>
       <p v-else>
         Você receberá uma referência de pagamento via SMS. Use-a em qualquer ATM Multicaixa
@@ -167,6 +167,23 @@ const selectMethod = (method: MetodoPagamento) => {
   background: var(--color-success-light, #dcfce7);
   color: var(--color-success-dark, #166534);
   border-radius: var(--radius-sm, 4px);
+}
+
+.pms-badge--instant {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  font-weight: 600;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0);
+  }
 }
 
 .pms-option-check {

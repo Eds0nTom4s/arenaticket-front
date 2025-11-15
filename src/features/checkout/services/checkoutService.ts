@@ -3,10 +3,8 @@
  * Implementa idempotência e retry automático
  */
 
-import type {
-  CheckoutRequest,
-  CheckoutResponse,
-} from '../types/checkout.types';
+import type { CheckoutRequest } from '../types/checkout.types';
+import type { PedidoBackendResponse } from '../types/pedido.types';
 import { retryWithBackoff, isRetryableError } from '../utils/retryWithBackoff';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1/public';
@@ -21,7 +19,7 @@ const API_BASE_URL = 'http://localhost:8080/api/v1/public';
 export async function createCheckout(
   data: CheckoutRequest,
   idempotencyKey: string
-): Promise<CheckoutResponse> {
+): Promise<PedidoBackendResponse> {
   console.log('[CheckoutService] Criando pedido com chave:', idempotencyKey);
   
   return retryWithBackoff(
@@ -44,7 +42,19 @@ export async function createCheckout(
           status: response.status,
           data: errorData,
         };
+        // Classificar erro retryable inicialmente
         error.isRetryable = isRetryableError(error);
+
+        // Não devemos fazer retry em falhas de autenticação do provedor de pagamento
+        const msgLower = (errorData.message || '').toLowerCase();
+        if (
+          msgLower.includes('autenticação appypay') ||
+          msgLower.includes('appypay') && msgLower.includes('autentica') ||
+          error.response.status === 401 ||
+          error.response.status === 403
+        ) {
+          error.isRetryable = false;
+        }
         
         console.error('[CheckoutService] Erro na requisição:', error);
         throw error;
@@ -53,13 +63,18 @@ export async function createCheckout(
       const result = await response.json();
       console.log('[CheckoutService] Pedido criado com sucesso:', result);
       
-      return result;
+      // Backend v1.2.0 retorna dados diretos (não em wrapper)
+      return result as PedidoBackendResponse;
     },
     {
       maxRetries: 3,
       initialDelay: 2000, // 2 segundos
       maxDelay: 8000, // 8 segundos
-      shouldRetry: isRetryableError,
+      shouldRetry: (error) => {
+        // Respeitar flag calculada em createCheckout
+        if (error.isRetryable === false) return false;
+        return isRetryableError(error);
+      },
     }
   );
 }

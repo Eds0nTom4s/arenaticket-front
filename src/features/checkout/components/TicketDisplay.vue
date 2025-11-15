@@ -16,8 +16,8 @@
       >
         <div class="td-ticket-header">
           <div>
-            <h3>{{ bilhete.evento.titulo }}</h3>
-            <span class="td-lote">{{ bilhete.lote.nome }}</span>
+            <h3>{{ bilhete.evento?.titulo || 'Evento' }}</h3>
+            <span class="td-lote">{{ bilhete.lote?.nome || 'Lote' }}</span>
           </div>
           <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
         </div>
@@ -48,15 +48,15 @@
           </div>
           <div class="td-detail-row">
             <AtIcon name="calendar" />
-            <span>{{ formatDataEvento(bilhete.evento.dataEvento) }}</span>
+            <span>{{ formatDataEvento(bilhete.evento?.dataEvento || '') }}</span>
           </div>
           <div class="td-detail-row">
             <AtIcon name="map-pin" />
-            <span>{{ bilhete.evento.local }}</span>
+            <span>{{ bilhete.evento?.local || '' }}</span>
           </div>
           <div class="td-detail-row">
             <AtIcon name="ticket" />
-            <span>{{ bilhete.lote.nome }} - {{ formatKwanza(bilhete.lote.preco) }}</span>
+            <span>{{ (bilhete.lote?.nome || 'Lote') + ' - ' + formatKwanza(bilhete.lote?.preco || 0) }}</span>
           </div>
         </div>
 
@@ -179,14 +179,14 @@ const downloadTicket = (bilhete: Bilhete) => {
 
   // Evento
   ctx.font = '24px Arial';
-  ctx.fillText(bilhete.evento.titulo, canvas.width / 2, 100);
+  ctx.fillText(bilhete.evento?.titulo || 'Evento', canvas.width / 2, 100);
 
   // Detalhes
   ctx.font = '18px Arial';
   ctx.textAlign = 'left';
-  ctx.fillText(`Local: ${bilhete.evento.local}`, 50, 150);
-  ctx.fillText(`Data: ${formatDataEvento(bilhete.evento.dataEvento)}`, 50, 180);
-  ctx.fillText(`Lote: ${bilhete.lote.nome}`, 50, 210);
+  ctx.fillText(`Local: ${bilhete.evento?.local || ''}`, 50, 150);
+  ctx.fillText(`Data: ${formatDataEvento(bilhete.evento?.dataEvento || '')}`, 50, 180);
+  ctx.fillText(`Lote: ${bilhete.lote?.nome || ''}`, 50, 210);
   ctx.fillText(`Comprador: ${bilhete.compradorNome}`, 50, 240);
 
   // Código

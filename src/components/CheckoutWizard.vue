@@ -80,6 +80,7 @@
           :pedido="checkoutResult"
           :telefone="buyerInfo.telefone"
           :metodo-pagamento="buyerInfo.metodo"
+          :bilhetes-iniciais="[...bilhetesInstantaneos]"
           @complete="handlePaymentComplete"
           @error="handlePaymentError"
           @close="handleClose"
@@ -92,8 +93,15 @@
       <div v-if="!pedidoCriado" class="cw-footer">
         <!-- Erro de checkout -->
         <div v-if="checkoutError" class="cw-error">
-          <AtIcon name="alert-circle" />
-          <span>{{ checkoutError }}</span>
+          <div class="cw-error-main">
+            <AtIcon name="alert-circle" />
+            <span>{{ checkoutError }}</span>
+          </div>
+          <div class="cw-error-actions" v-if="canSwitchToReferencia">
+            <AtButton size="sm" variant="secondary" @click="switchToReferencia">
+              Usar Referência ATM
+            </AtButton>
+          </div>
         </div>
 
         <!-- Botões de navegação -->
@@ -155,7 +163,8 @@ import {
   cleanTelefone,
 } from '../features/checkout/utils/validators';
 
-import type { CheckoutRequest, CheckoutResponse, Lote } from '../features/checkout/types/checkout.types';
+import type { CheckoutRequest, Lote } from '../features/checkout/types/checkout.types';
+import type { PedidoBackendResponse } from '../features/checkout/types/pedido.types';
 
 const props = defineProps({
   evento: { type: Object, required: true }
@@ -179,8 +188,15 @@ const pedidoCriado = ref(false);
 
 // Hooks
 const { generateKey, resetKey } = useIdempotency();
-const { isCreating: checkoutLoading, error: checkoutError, createOrder } = useCheckout();
-const checkoutResult = ref<CheckoutResponse | null>(null);
+const { 
+  isCreating: checkoutLoading, 
+  error: checkoutError, 
+  createOrder,
+  bilhetes: bilhetesInstantaneos, // ✨ NOVO v1.2.0: Bilhetes de GPO instantâneo
+  isPaidInstantly, // ✨ NOVO v1.2.0: Flag de pagamento instantâneo
+  reset: resetCheckout
+} = useCheckout();
+const checkoutResult = ref<PedidoBackendResponse | null>(null);
 
 function handleLotesLoaded(lotes: Lote[]) {
   availableLotes.value = lotes;
@@ -240,6 +256,21 @@ function prevStep() {
   }
 }
 
+const canSwitchToReferencia = computed(() => {
+  return (
+    buyerInfo.value.metodo === 'GPO' &&
+    !!checkoutError.value &&
+    /appypay|provedor|autentica/i.test(checkoutError.value)
+  );
+});
+
+function switchToReferencia() {
+  buyerInfo.value.metodo = 'REFERENCIA';
+  resetCheckout();
+  // Voltar para etapa de pagamento para confirmar novamente
+  currentStep.value = 2;
+}
+
 async function confirmPurchase() {
   if (checkoutLoading.value) return;
 
@@ -278,9 +309,10 @@ async function confirmPurchase() {
 }
 
 function handlePaymentComplete(bilhetes: any[]) {
-  console.log('[CheckoutWizard] Pagamento completo. Bilhetes:', bilhetes);
+  console.log('[CheckoutWizard] Pagamento completo. Bilhetes recebidos:', bilhetes);
+  // Não fechamos automaticamente o modal; usuário deve clicar "Fechar" nos bilhetes
   resetKey();
-  emit('confirm', bilhetes);
+  // (Opcional futuramente: poder emitir um evento de analytics aqui)
 }
 
 function handlePaymentError(error: Error) {
@@ -368,7 +400,7 @@ onUnmounted(() => {
 
 .cw-error {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--spacing-2, 0.5rem);
   padding: var(--spacing-3, 1rem);
   background: var(--color-error-light, #fee2e2);
@@ -377,6 +409,23 @@ onUnmounted(() => {
   font-size: var(--font-size-sm, 0.875rem);
   color: var(--color-error-dark, #991b1b);
   animation: slideIn 0.3s ease-out;
+}
+
+.cw-error-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+.cw-error-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-2, 0.5rem);
+}
+
+.cw-error-actions button {
+  font-size: 0.75rem;
+  padding: 4px 8px;
 }
 
 @keyframes slideIn {

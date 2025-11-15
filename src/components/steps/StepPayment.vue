@@ -49,21 +49,22 @@ import AtIcon from '../AtIcon.vue';
 import PaymentMethodSelector from '../../features/checkout/components/PaymentMethodSelector.vue';
 import { isValidAngolaTelefone } from '../../features/checkout/utils/validators';
 
-const props = defineProps({
-  modelValue: {
-    type: Object as () => { 
-      nome: string; 
-      telefone: string; 
-      email?: string;
-      metodo: string 
-    },
-    required: true
-  }
-});
+import type { MetodoPagamento } from '../../features/checkout/types/checkout.types';
+
+interface StepPaymentModel {
+  nome: string;
+  telefone: string;
+  email?: string;
+  metodo: MetodoPagamento;
+}
+
+const props = defineProps<{
+  modelValue: StepPaymentModel;
+}>();
 
 const emit = defineEmits(['update:modelValue']);
 
-function update(field: string, value: string) {
+function update(field: keyof StepPaymentModel, value: string) {
   emit('update:modelValue', { ...props.modelValue, [field]: value });
 }
 

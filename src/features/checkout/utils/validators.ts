@@ -164,7 +164,17 @@ export function getFriendlyErrorMessage(error: any): string {
   }
   
   // Erros HTTP conhecidos
-  const status = error.response?.status;
+    const status = error.response?.status;  
+    const rawMessage = error.response?.data?.message || '';
+    const rawLower = (rawMessage || '').toLowerCase();
+    // Detecção específica de falha de autenticação AppyPay para mensagem orientativa
+    const isAppyPayAuthIssue =
+      rawLower.includes('autenticação appypay') ||
+      (rawLower.includes('appypay') && rawLower.includes('autentica'));
+
+    if (isAppyPayAuthIssue) {
+      return 'Falha na autenticação com o provedor de pagamento. Escolha Referência ATM ou tente novamente mais tarde.';
+    }
   
   switch (status) {
     case 400:

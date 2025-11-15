@@ -53,10 +53,44 @@ export async function getPedidoBilhetes(pedidoId: string): Promise<Bilhete[]> {
     throw error;
   }
 
-  const bilhetes = await response.json();
-  console.log('[PaymentService] Bilhetes obtidos:', bilhetes.length);
+  const raw = await response.json();
+  const list = Array.isArray(raw) ? raw : [raw];
+  const normalized: Bilhete[] = list.map((b: any) => {
+    const evento = b.evento && typeof b.evento === 'object' ? b.evento : {
+      titulo: b.eventoTitulo || b.eventoNome || b.titulo || b.evento || '',
+      local: b.eventoLocal || b.local || '',
+      dataEvento: b.eventoData || b.dataEvento || b.data || '',
+    };
+    const lote = b.lote && typeof b.lote === 'object' ? b.lote : {
+      nome: b.loteNome || b.nomeLote || b.lote || '',
+      preco: Number(b.preco ?? b.valor ?? b.precoUnitario ?? 0),
+    };
+    const codigoTicket: string = b.codigoTicket || b.codigo || b.code || '';
+    const codigoTicketCompact: string = (codigoTicket || '').replace(/[^A-Za-z0-9]/g, '');
+    let codigoQR: string = b.codigoQR || b.qrCode || b.qrcode || '';
+    if (codigoQR && !/^data:image\//.test(codigoQR)) {
+      // Assumir PNG por padrão se não vier com prefixo data URL
+      codigoQR = `data:image/png;base64,${codigoQR}`;
+    }
 
-  return bilhetes;
+    const bilhete: Bilhete = {
+      id: String(b.id || b.bilheteId || b.ticketId || codigoTicket || Math.random().toString(36).slice(2)),
+      codigoTicket,
+      codigoTicketCompact,
+      codigoQR,
+      status: (b.status || 'VALID') as Bilhete['status'],
+      compradorNome: b.compradorNome || b.nomeComprador || '',
+      compradorTelefone: b.compradorTelefone || b.telefoneComprador || '',
+      evento,
+      lote,
+      vendidoEm: b.vendidoEm || b.dataVenda || b.createdAt || undefined,
+    };
+    return bilhete;
+  });
+
+  console.log('[PaymentService] Bilhetes obtidos (normalizados):', normalized.length);
+
+  return normalized;
 }
 
 /**

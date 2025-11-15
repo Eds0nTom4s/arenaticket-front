@@ -13,7 +13,6 @@
       v-if="modalOpen"
       :evento="eventoSelecionado"
       @close="modalOpen = false"
-      @confirm="simularCompra"
     />
     <AtToast v-if="toast.show" :type="toast.type">
       <template #icon>
@@ -38,26 +37,36 @@ import AtLoader from '../components/AtLoader.vue';
 import AtIcon from '../components/AtIcon.vue';
 import { fetchEventos } from '../services/api';
 
-const eventos = ref([]);
+interface EventoResumo {
+  id: string;
+  nome: string;
+  titulo: string;
+  data: string;
+  dataEvento: string;
+  local: string;
+  descricao: string;
+  bannerUrl: string;
+  status: string;
+  abertoParaVenda: boolean;
+}
+
+const eventos = ref<EventoResumo[]>([]);
 const modalOpen = ref(false);
-const eventoSelecionado = ref(null);
+const eventoSelecionado = ref<EventoResumo | null>(null);
 const loading = ref(true); // Inicia como true para mostrar o loader
 const toast = ref({ show: false, type: 'success', message: '' });
 
-function abrirCheckout(evento) {
+function abrirCheckout(evento: EventoResumo) {
   eventoSelecionado.value = evento;
   modalOpen.value = true;
 }
 
-function simularCompra() {
-  // Esta função será refatorada quando integrarmos o checkout
-  modalOpen.value = false;
-}
+// Removido fechamento automático no evento de confirmação para permitir visualização dos bilhetes
 
 onMounted(async () => {
   try {
     const data = await fetchEventos();
-    eventos.value = data.map(evento => ({
+    eventos.value = data.map((evento: any): EventoResumo => ({
       id: evento.id,
       nome: evento.titulo,
       titulo: evento.titulo,
