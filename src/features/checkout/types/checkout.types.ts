@@ -113,6 +113,7 @@ export interface PaymentStatusResponse {
   pedidoId: string;
   status: StatusPagamento;
   referencia: string;
+  entidade?: string;
   updatedAt: string;
 }
 

@@ -13,6 +13,8 @@
       :pedido="pedido"
       :telefone="telefone"
       :metodo-pagamento="metodoPagamento"
+      :referencia-override="lastResponse?.referencia"
+      :entidade-override="lastResponse?.entidade"
     />
 
     <!-- Erro -->
@@ -69,6 +71,7 @@ const {
   bilhetes: bilhetesPolling,
   isLoading,
   error,
+  lastResponse,
   startPolling,
   stopPolling,
 } = usePaymentStatus({
@@ -104,7 +107,13 @@ const bilhetes = computed(() => {
 });
 
 const retry = () => {
-  startPolling(props.pedido.id);
+  startPolling({
+    pedidoId: props.pedido.id,
+    clientRequestId: props.pedido.clientRequestId,
+    // tentativas alternativas se existirem
+    referencia: (props.pedido as any)?.referencia,
+    reservaId: (props.pedido as any)?.reservaId,
+  });
 };
 
 // Iniciar polling ao montar (pular se GPO já pago)
@@ -117,7 +126,12 @@ onMounted(() => {
   }
 
   console.log('[PaymentStatusPolling] Iniciando polling para pedido:', props.pedido.id);
-  startPolling(props.pedido.id);
+  startPolling({
+    pedidoId: props.pedido.id,
+    clientRequestId: props.pedido.clientRequestId,
+    referencia: (props.pedido as any)?.referencia,
+    reservaId: (props.pedido as any)?.reservaId,
+  });
 });
 </script>
 

@@ -38,6 +38,7 @@ import { ref, onMounted, watch } from 'vue';
 import AtLoader from '../AtLoader.vue';
 import AtButton from '../AtButton.vue';
 import { fetchEventoDetalhes } from '../../services/api';
+import type { Lote } from '../../features/checkout/types/checkout.types';
 
 const props = defineProps({
   eventoId: { type: String, required: true },
@@ -46,7 +47,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'lotes-loaded']);
 
-const lotes = ref([]);
+const lotes = ref<Lote[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const selectedLoteId = ref(props.modelValue);
@@ -61,10 +62,34 @@ async function fetchLotes() {
   try {
     const evento = await fetchEventoDetalhes(props.eventoId);
     const now = new Date();
-    lotes.value = evento.lotes.filter(lote => {
-      const inicioVenda = new Date(lote.inicioVenda);
-      const fimVenda = new Date(lote.fimVenda);
-      return lote.quantidadeDisponivel > 0 && inicioVenda <= now && fimVenda >= now;
+    // Filtro resiliente: considera ativo/quantidade e janelas válidas; se datas faltarem ou inválidas, não bloqueia.
+    lotes.value = (evento.lotes || []).filter((lote: Lote) => {
+      const quantidadeOk = typeof lote.quantidadeDisponivel === 'number' ? lote.quantidadeDisponivel > 0 : true;
+      const ativoOk = lote.ativo !== false; // se não vier, assume true
+
+      let janelaOk = true;
+      if (lote.inicioVenda && lote.fimVenda) {
+        const inicioVenda = new Date(lote.inicioVenda);
+        const fimVenda = new Date(lote.fimVenda);
+        const datasValidas = !isNaN(inicioVenda.getTime()) && !isNaN(fimVenda.getTime());
+        janelaOk = datasValidas ? (inicioVenda <= now && fimVenda >= now) : true;
+      }
+
+      const ok = quantidadeOk && ativoOk && janelaOk;
+      if (!ok) {
+        console.debug('[StepLoteSelection] Lote ocultado', {
+          id: lote.id,
+          nome: lote.nome,
+          quantidadeDisponivel: lote.quantidadeDisponivel,
+          ativo: lote.ativo,
+          inicioVenda: lote.inicioVenda,
+          fimVenda: lote.fimVenda,
+          quantidadeOk,
+          ativoOk,
+          janelaOk,
+        });
+      }
+      return ok;
     });
     emit('lotes-loaded', lotes.value);
   } catch (e) {

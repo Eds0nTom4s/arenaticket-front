@@ -15,22 +15,52 @@ const API_BASE_URL = 'http://localhost:8080/api/v1/public';
  * @returns Promise com status do pagamento
  */
 export async function getPaymentStatus(
-  pedidoId: string
+  identity:
+    | string
+    | {
+        pedidoId?: string;
+        clientRequestId?: string;
+        reservaId?: string;
+        referencia?: string;
+      }
 ): Promise<PaymentStatusResponse> {
-  console.log('[PaymentService] Consultando status do pedido:', pedidoId);
+  const ident = typeof identity === 'string' ? { pedidoId: identity } : identity;
 
-  const response = await fetch(`${API_BASE_URL}/pagamentos/${pedidoId}/status`);
+  const candidates: string[] = [];
+  if (ident.pedidoId) candidates.push(`${API_BASE_URL}/pagamentos/${ident.pedidoId}/status`);
+  if (ident.clientRequestId)
+    candidates.push(`${API_BASE_URL}/pagamentos/cliente/${encodeURIComponent(ident.clientRequestId)}/status`);
+  if (ident.reservaId) candidates.push(`${API_BASE_URL}/pagamentos/reservas/${ident.reservaId}/status`);
+  if (ident.referencia) candidates.push(`${API_BASE_URL}/pagamentos/referencias/${ident.referencia}/status`);
 
-  if (!response.ok) {
-    const error = new Error(`HTTP error! status: ${response.status}`);
-    console.error('[PaymentService] Erro ao consultar status:', error);
-    throw error;
+  console.log('[PaymentService] Consultando status. Candidatos:', candidates);
+
+  let lastError: any = null;
+  for (const url of candidates) {
+    try {
+      console.log('[PaymentService] Consultando:', url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        lastError = new Error(`HTTP error! status: ${response.status}`);
+        // Tentar próxima URL quando 404; parar em outros erros
+        if (response.status !== 404) {
+          console.error('[PaymentService] Erro ao consultar status:', lastError);
+          throw lastError;
+        }
+        console.warn('[PaymentService] Endpoint retornou 404, tentando próximo...');
+        continue;
+      }
+      const data = (await response.json()) as PaymentStatusResponse;
+      console.log('[PaymentService] Status obtido:', data);
+      return data;
+    } catch (e) {
+      lastError = e;
+      console.error('[PaymentService] Falha ao consultar', url, e);
+    }
   }
 
-  const data = await response.json();
-  console.log('[PaymentService] Status obtido:', data);
-
-  return data;
+  console.error('[PaymentService] Todas as tentativas de consulta falharam.');
+  throw lastError || new Error('Falha ao consultar status');
 }
 
 /**

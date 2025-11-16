@@ -6,6 +6,7 @@
 import { ref, onUnmounted, readonly } from 'vue';
 import type { StatusPagamento, Bilhete } from '../types/checkout.types';
 import { getPaymentStatus, getPedidoBilhetes } from '../services/paymentService';
+import type { PaymentStatusResponse } from '../types/checkout.types';
 
 export interface UsePaymentStatusOptions {
   /**
@@ -48,6 +49,7 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
   const isLoading = ref(false);
   const error = ref<Error | null>(null);
   const isPolling = ref(false);
+  const lastResponse = ref<PaymentStatusResponse | null>(null);
 
   let intervalId: number | null = null;
   let timeoutId: number | null = null;
@@ -56,9 +58,14 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
   /**
    * Inicia o polling de status
    */
-  const startPolling = async (pedidoId: string): Promise<void> => {
-    if (!pedidoId) {
-      console.error('[PaymentStatus] ID do pedido não fornecido');
+  const startPolling = async (
+    identity:
+      | string
+      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string }
+  ): Promise<void> => {
+    const hasAnyId = typeof identity === 'string' ? !!identity : !!(identity.pedidoId || identity.clientRequestId || identity.reservaId || identity.referencia);
+    if (!hasAnyId) {
+      console.error('[PaymentStatus] Identificador do pagamento não fornecido');
       return;
     }
 
@@ -67,7 +74,7 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
       return;
     }
 
-    console.log('[PaymentStatus] Iniciando polling para pedido:', pedidoId);
+  console.log('[PaymentStatus] Iniciando polling com identidade:', identity);
     
     isLoading.value = true;
     isPolling.value = true;
@@ -75,11 +82,11 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
     startTime = Date.now();
 
     // Verificar status imediatamente
-    await checkStatus(pedidoId);
+  await checkStatus(identity);
 
     // Configurar polling periódico
     intervalId = window.setInterval(() => {
-      checkStatus(pedidoId);
+      checkStatus(identity);
     }, intervalMs);
 
     // Configurar timeout
@@ -97,7 +104,11 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
   /**
    * Verifica o status do pagamento
    */
-  const checkStatus = async (pedidoId: string): Promise<void> => {
+  const checkStatus = async (
+    identity:
+      | string
+      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string }
+  ): Promise<void> => {
     try {
       // Verificar se já passou do timeout
       if (Date.now() - startTime > timeoutMs) {
@@ -105,9 +116,10 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
         return;
       }
 
-      console.log('[PaymentStatus] Verificando status...');
+  console.log('[PaymentStatus] Verificando status...');
       
-      const statusData = await getPaymentStatus(pedidoId);
+  const statusData = await getPaymentStatus(identity);
+  lastResponse.value = statusData;
       status.value = statusData.status;
 
       console.log('[PaymentStatus] Status atual:', statusData.status);
@@ -117,7 +129,8 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
         console.log('[PaymentStatus] Pagamento confirmado! Buscando bilhetes...');
         
         // Buscar bilhetes
-        const bilhetesData = await getPedidoBilhetes(pedidoId);
+  const pedidoId = typeof identity === 'string' ? identity : identity.pedidoId || '';
+  const bilhetesData = await getPedidoBilhetes(pedidoId);
         bilhetes.value = bilhetesData;
         
         stopPolling();
@@ -189,6 +202,7 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
     isLoading: readonly(isLoading),
     error: readonly(error),
     isPolling: readonly(isPolling),
+    lastResponse: readonly(lastResponse),
     startPolling,
     stopPolling,
     reset,

@@ -60,7 +60,7 @@
     <div v-else class="pi-referencia">
       <div class="pi-header">
         <AtIcon name="bank" class="pi-header-icon" />
-        <h3>Instruções de Pagamento</h3>
+        <h3>Pagamento por Referência Multicaixa</h3>
       </div>
 
       <div class="pi-content">
@@ -71,13 +71,28 @@
 
         <div class="pi-details">
           <div class="pi-detail-item">
-            <label>Referência:</label>
+            <label>Entidade:</label>
             <div class="pi-detail-value">
-              <strong>{{ pedido.clientRequestId }}</strong>
+              <strong class="pi-entity-value">{{ entidade }}</strong>
               <button
                 type="button"
                 class="pi-copy-btn"
-                @click="copyToClipboard(pedido.clientRequestId)"
+                @click="copyToClipboard(entidade)"
+                :title="copied ? 'Copiado!' : 'Copiar'"
+              >
+                <AtIcon :name="copied ? 'check' : 'copy'" />
+              </button>
+            </div>
+          </div>
+
+          <div class="pi-detail-item">
+            <label>Referência:</label>
+            <div class="pi-detail-value">
+              <strong class="pi-ref-value">{{ referencia }}</strong>
+              <button
+                type="button"
+                class="pi-copy-btn"
+                @click="copyToClipboard(referencia)"
                 :title="copied ? 'Copiado!' : 'Copiar'"
               >
                 <AtIcon :name="copied ? 'check' : 'copy'" />
@@ -135,6 +150,8 @@ const props = defineProps<{
   pedido: PedidoBackendResponse;
   telefone: string;
   metodoPagamento?: 'GPO' | 'REFERENCIA';
+  referenciaOverride?: string;
+  entidadeOverride?: string;
 }>();
 
 const copied = ref(false);
@@ -142,6 +159,23 @@ const copied = ref(false);
 // Computed para verificar status e método
 const isPaid = computed(() => props.pedido.status === 'PAID');
 const isGPO = computed(() => props.metodoPagamento === 'GPO');
+
+// Dados de entidade e referência (com fallbacks)
+const referencia = computed(() => {
+  const r = props.referenciaOverride
+    || (props.pedido as any)?.pagamento?.referencia
+    || (props.pedido as any)?.referencia
+    || '';
+  return String(r || '');
+});
+
+const entidade = computed(() => {
+  const e = props.entidadeOverride
+    || (props.pedido as any)?.pagamento?.entidade
+    || (props.pedido as any)?.entidade
+    || '';
+  return String(e);
+});
 
 const copyToClipboard = async (text: string) => {
   try {
@@ -331,6 +365,14 @@ const copyToClipboard = async (text: string) => {
   font-size: var(--font-size-xl, 1.5rem);
   color: var(--color-text-primary, #1a1a1a);
   font-family: monospace;
+}
+
+.pi-entity-value {
+  font-size: var(--font-size-2xl, 2rem);
+}
+
+.pi-ref-value {
+  font-size: var(--font-size-2xl, 2rem);
 }
 
 .pi-amount-value {
