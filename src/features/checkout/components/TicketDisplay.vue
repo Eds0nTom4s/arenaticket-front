@@ -292,7 +292,6 @@ const downloadTicket = (bilhete: Bilhete) => {
   // Criar canvas para gerar imagem do bilhete
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  
   if (!ctx) return;
 
   // Configurar tamanho (formato A6 landscape)
@@ -308,37 +307,51 @@ const downloadTicket = (bilhete: Bilhete) => {
   ctx.lineWidth = 4;
   ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-  // Título
+  // Cabeçalho enxuto: rótulo pequeno + título do evento grande (sem redundância)
+  const tituloEvento = displayTitulo(bilhete);
   ctx.fillStyle = '#1a1a1a';
-  ctx.font = 'bold 32px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('GDSE - Bilhete de Entrada', canvas.width / 2, 60);
+  ctx.font = '600 14px Arial';
+  ctx.fillText('Bilhete de Entrada', canvas.width / 2, 48);
+  ctx.font = '700 34px Arial';
+  ctx.fillText(tituloEvento, canvas.width / 2, 88);
 
-  // Evento
-  ctx.font = '24px Arial';
-  ctx.fillText(bilhete.evento?.titulo || 'Evento', canvas.width / 2, 100);
-
-  // Detalhes
-  ctx.font = '18px Arial';
+  // Bloco de detalhes (exibir somente quando houver informação)
   ctx.textAlign = 'left';
-  ctx.fillText(`Local: ${bilhete.evento?.local || ''}`, 50, 150);
-  ctx.fillText(`Data: ${formatDataEvento(bilhete.evento?.dataEvento || '')}`, 50, 180);
-  ctx.fillText(`Lote: ${bilhete.lote?.nome || ''}`, 50, 210);
-  ctx.fillText(`Comprador: ${bilhete.compradorNome}`, 50, 240);
+  ctx.font = '16px Arial';
+  const detalhes: Array<[string, string]> = [];
+  const localStr = displayLocal(bilhete);
+  const dataStr = displayData(bilhete);
+  if (localStr && localStr.trim().length > 0) detalhes.push(['Local', localStr]);
+  if (dataStr && !['Data não disponível', 'Data inválida'].includes(dataStr)) detalhes.push(['Data', dataStr]);
+  if (bilhete.lote?.nome) detalhes.push(['Lote', bilhete.lote.nome]);
+  detalhes.push(['Comprador', bilhete.compradorNome]);
 
-  // Código
-  ctx.font = 'bold 28px monospace';
+  let y = 140;
+  detalhes.forEach(([label, value]) => {
+    ctx.fillText(`${label}: ${value}`, 50, y);
+    y += 28;
+  });
+
+  // Código do bilhete em destaque
   ctx.textAlign = 'center';
-  ctx.fillText(`Código: ${bilhete.codigoTicket}`, canvas.width / 2, 300);
+  ctx.font = '700 28px monospace';
+  ctx.fillText(`Código: ${formatCodigoBilhete(bilhete.codigoTicket)}`, canvas.width / 2, 300);
 
-  // Função para finalizar e baixar
+  // Função para finalizar e baixar (roda-pés discretos)
   const finalizar = () => {
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Juntos Pela Vitória', canvas.width / 2, canvas.height - 30);
+    // Mensagem institucional discreta (esq) e assinatura ArenaTicket (dir)
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText('Juntos Pela Vitória', 22, canvas.height - 26);
+    ctx.textAlign = 'right';
+    ctx.fillText('Gerado com @arenaticket - 925813939', canvas.width - 22, canvas.height - 26);
+
     downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
   };
 
+  // QR Code (se houver)
   if (bilhete.codigoQR) {
     const img = new Image();
     img.onload = () => {
