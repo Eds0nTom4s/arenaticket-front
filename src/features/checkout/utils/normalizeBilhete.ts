@@ -5,6 +5,7 @@ import type { Bilhete } from '../types/checkout.types';
  */
 export function normalizeBilhete(raw: any): Bilhete {
   const evento = raw.evento && typeof raw.evento === 'object' ? raw.evento : {
+    id: raw.eventoId,
     titulo: raw.eventoTitulo || raw.eventoNome || raw.titulo || raw.evento || '',
     local: raw.eventoLocal || raw.local || '',
     dataEvento: raw.eventoData || raw.dataEvento || raw.data || '',

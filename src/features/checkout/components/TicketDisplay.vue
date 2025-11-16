@@ -2,13 +2,97 @@
   <div class="ticket-display">
     <div class="td-header">
       <div class="td-success-icon">
-        <AtIcon name="check-circle" />
+        <AtIcon><span>✔️</span></AtIcon>
       </div>
       <h2>✅ Pagamento Confirmado!</h2>
       <p>Seus bilhetes foram gerados com sucesso</p>
     </div>
 
-    <div class="td-tickets-grid">
+    <div v-if="bilhetes.length > 1" class="td-carousel">
+      <div class="td-carousel-track" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
+        <div
+          v-for="(bilhete, index) in bilhetes"
+          :key="bilhete.id"
+          class="td-ticket-card td-slide"
+        >
+          <div class="td-ticket-header">
+            <div>
+              <h3>{{ displayTitulo(bilhete) }}</h3>
+              <span class="td-lote">{{ bilhete.lote?.nome || 'Lote' }}</span>
+            </div>
+            <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
+          </div>
+
+          <div class="td-ticket-qr">
+            <template v-if="bilhete.codigoQR">
+              <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" />
+            </template>
+            <template v-else>
+              <div class="td-qr-skeleton">QR não disponível</div>
+            </template>
+          </div>
+
+          <div class="td-ticket-code">
+            <label>Código do Bilhete:</label>
+            <div class="td-code-value">
+              <strong>{{ formatCodigoBilhete(bilhete.codigoTicket) }}</strong>
+              <button
+                type="button"
+                class="td-copy-btn"
+                @click="copyCode(bilhete.codigoTicket)"
+                :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
+              >
+                <AtIcon><span>{{ copiedCodes[bilhete.id] ? '✔️' : '📋' }}</span></AtIcon>
+              </button>
+            </div>
+          </div>
+
+          <div class="td-ticket-details">
+            <div class="td-detail-row">
+              <AtIcon><span>👤</span></AtIcon>
+              <span>{{ bilhete.compradorNome }}</span>
+            </div>
+            <div class="td-detail-row">
+              <AtIcon><span>📅</span></AtIcon>
+              <span>{{ displayData(bilhete) }}</span>
+            </div>
+            <div class="td-detail-row">
+              <AtIcon><span>📍</span></AtIcon>
+              <span>{{ displayLocal(bilhete) }}</span>
+            </div>
+            <div class="td-detail-row">
+              <AtIcon><span>🎟️</span></AtIcon>
+              <span>{{ bilhete.lote?.nome || 'Lote' }}</span>
+            </div>
+          </div>
+
+          <div class="td-ticket-actions">
+            <AtButton
+              variant="secondary"
+              size="sm"
+              @click="downloadTicket(bilhete)"
+            >
+              <AtIcon><span>⬇️</span></AtIcon>
+              Baixar
+            </AtButton>
+            <AtButton
+              variant="primary"
+              size="sm"
+              @click="shareWhatsApp(bilhete)"
+            >
+              <AtIcon><span>📤</span></AtIcon>
+              WhatsApp
+            </AtButton>
+          </div>
+        </div>
+      </div>
+      <div class="td-carousel-controls" aria-hidden="false">
+        <button class="td-carousel-btn prev" @click="prev" aria-label="Bilhete anterior">‹</button>
+        <button class="td-carousel-btn next" @click="next" aria-label="Próximo bilhete">›</button>
+      </div>
+    </div>
+
+    <div v-else class="td-tickets-grid">
       <div
         v-for="(bilhete, index) in bilhetes"
         :key="bilhete.id"
@@ -16,7 +100,7 @@
       >
         <div class="td-ticket-header">
           <div>
-            <h3>{{ bilhete.evento?.titulo || 'Evento' }}</h3>
+            <h3>{{ displayTitulo(bilhete) }}</h3>
             <span class="td-lote">{{ bilhete.lote?.nome || 'Lote' }}</span>
           </div>
           <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
@@ -41,27 +125,27 @@
               @click="copyCode(bilhete.codigoTicket)"
               :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
             >
-              <AtIcon :name="copiedCodes[bilhete.id] ? 'check' : 'copy'" />
+              <AtIcon><span>{{ copiedCodes[bilhete.id] ? '✔️' : '📋' }}</span></AtIcon>
             </button>
           </div>
         </div>
 
         <div class="td-ticket-details">
           <div class="td-detail-row">
-            <AtIcon name="user" />
+            <AtIcon><span>👤</span></AtIcon>
             <span>{{ bilhete.compradorNome }}</span>
           </div>
           <div class="td-detail-row">
-            <AtIcon name="calendar" />
-            <span>{{ formatDataEvento(bilhete.evento?.dataEvento || '') }}</span>
+            <AtIcon><span>📅</span></AtIcon>
+            <span>{{ displayData(bilhete) }}</span>
           </div>
           <div class="td-detail-row">
-            <AtIcon name="map-pin" />
-            <span>{{ bilhete.evento?.local || '' }}</span>
+            <AtIcon><span>📍</span></AtIcon>
+            <span>{{ displayLocal(bilhete) }}</span>
           </div>
           <div class="td-detail-row">
-            <AtIcon name="ticket" />
-            <span>{{ (bilhete.lote?.nome || 'Lote') + ' - ' + formatKwanza(bilhete.lote?.preco || 0) }}</span>
+            <AtIcon><span>🎟️</span></AtIcon>
+            <span>{{ bilhete.lote?.nome || 'Lote' }}</span>
           </div>
         </div>
 
@@ -71,7 +155,7 @@
             size="sm"
             @click="downloadTicket(bilhete)"
           >
-            <AtIcon name="download" />
+            <AtIcon><span>⬇️</span></AtIcon>
             Baixar
           </AtButton>
           <AtButton
@@ -79,7 +163,7 @@
             size="sm"
             @click="shareWhatsApp(bilhete)"
           >
-            <AtIcon name="share" />
+            <AtIcon><span>📤</span></AtIcon>
             WhatsApp
           </AtButton>
         </div>
@@ -87,7 +171,7 @@
     </div>
 
     <div class="td-sms-confirmation">
-      <AtIcon name="message" />
+  <AtIcon><span>💬</span></AtIcon>
       <p>
         📱 Os códigos dos bilhetes também foram enviados via SMS para o número registrado.
         Mostre os códigos ou QR codes na entrada do evento.
@@ -96,7 +180,7 @@
 
     <div class="td-footer">
       <div class="td-important">
-        <AtIcon name="info" />
+  <AtIcon><span>ℹ️</span></AtIcon>
         <div>
           <h4>Informações Importantes:</h4>
           <ul>
@@ -125,16 +209,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import AtIcon from '../../../components/AtIcon.vue';
 import AtButton from '../../../components/AtButton.vue';
 import AtBadge from '../../../components/AtBadge.vue';
 import type { Bilhete } from '../types/checkout.types';
 import {
   formatCodigoBilhete,
-  formatKwanza,
   formatDataEvento,
 } from '../utils/validators';
+import { fetchEventoDetalhes } from '../../../services/api';
+// Removido TicketSlider; carrossel nativo inline
 
 const props = defineProps<{
   bilhetes: Bilhete[];
@@ -145,6 +230,46 @@ const emit = defineEmits<{
 }>();
 
 const copiedCodes = reactive<Record<string, boolean>>({});
+const eventDetails = reactive<Record<string, any>>({});
+
+const ensureEventDetails = async () => {
+  const missingIds = Array.from(new Set(
+    props.bilhetes
+      .map(b => b.evento?.id)
+      .filter((id): id is string => !!id)
+      .filter(id => !eventDetails[id])
+  ));
+  if (missingIds.length === 0) return;
+
+  await Promise.all(missingIds.map(async (id) => {
+    try {
+      const data = await fetchEventoDetalhes(id);
+      eventDetails[id] = data;
+    } catch (e) {
+      console.warn('Falha ao obter detalhes do evento', id, e);
+    }
+  }));
+};
+
+onMounted(ensureEventDetails);
+watch(() => props.bilhetes, ensureEventDetails, { deep: true });
+
+const displayTitulo = (b: Bilhete) => b.evento?.titulo || (b.evento?.id && eventDetails[b.evento.id]?.titulo) || 'Evento';
+const displayLocal = (b: Bilhete) => b.evento?.local || (b.evento?.id && eventDetails[b.evento.id]?.local) || '';
+const rawEventDate = (b: Bilhete) => b.evento?.dataEvento || (b.evento?.id && eventDetails[b.evento.id]?.dataEvento) || '';
+const displayData = (b: Bilhete) => formatDataEvento(rawEventDate(b));
+
+// Controle do carrossel inline
+const currentIndex = ref(0);
+const next = () => {
+  if (props.bilhetes.length === 0) return;
+  currentIndex.value = (currentIndex.value + 1) % props.bilhetes.length;
+};
+const prev = () => {
+  if (props.bilhetes.length === 0) return;
+  currentIndex.value = (currentIndex.value - 1 + props.bilhetes.length) % props.bilhetes.length;
+};
+watch(() => props.bilhetes.length, () => { currentIndex.value = 0; });
 
 const copyCode = async (codigo: string) => {
   try {
@@ -291,6 +416,43 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: var(--spacing-4, 1.5rem);
   margin-bottom: var(--spacing-6, 2rem);
+}
+
+/* Carrossel inline */
+.td-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: var(--spacing-6, 2rem);
+}
+.td-carousel-track {
+  display: flex;
+  transition: transform 0.3s ease-in-out;
+  width: 100%;
+}
+.td-slide {
+  flex: 0 0 100%;
+  width: 100%;
+}
+.td-carousel-controls {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.td-carousel-btn {
+  pointer-events: auto;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .td-ticket-card {

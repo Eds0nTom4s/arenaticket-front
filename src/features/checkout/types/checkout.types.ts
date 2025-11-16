@@ -76,6 +76,7 @@ export interface CheckoutResponse {
  * Informações do evento (simplificado)
  */
 export interface EventoInfo {
+  id?: string;
   titulo: string;
   local: string;
   dataEvento: string;
