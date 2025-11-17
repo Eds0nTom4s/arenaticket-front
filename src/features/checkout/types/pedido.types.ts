@@ -10,10 +10,13 @@ export interface PedidoBackendResponse {
   compradorTelefone: string;
   compradorEmail: string | null;
   total: number;
-  status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED';
+  status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
   paymentProvider: string;
   paymentId: string | null;
   reservaId: string;
+  referencia?: string;
+  entidade?: string;
+  mensagem?: string;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: any;

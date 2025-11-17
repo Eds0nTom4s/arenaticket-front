@@ -74,17 +74,35 @@
           </div>
         </div>
 
-        <!-- Após criar pedido: Polling de status -->
-        <PaymentStatusPolling
-          v-else-if="checkoutResult"
-          :pedido="checkoutResult"
-          :telefone="buyerInfo.telefone"
-          :metodo-pagamento="buyerInfo.metodo"
-          :bilhetes-iniciais="[...bilhetesInstantaneos]"
-          @complete="handlePaymentComplete"
-          @error="handlePaymentError"
-          @close="handleClose"
-        />
+        <!-- Após criar pedido: render direto baseado no status -->
+        <div v-else-if="checkoutResult">
+          <!-- Sucesso imediato (GPO) com bilhetes -->
+          <TicketDisplay
+            v-if="checkoutResult.status === 'PAID' && bilhetesInstantaneos.length > 0"
+            :bilhetes="[...bilhetesInstantaneos]"
+            @close="handleClose"
+          />
+
+          <!-- Falha imediata (GPO) -->
+          <PaymentFailed
+            v-else-if="checkoutResult.status === 'FAILED'"
+            :mensagem="(checkoutResult as any).mensagem"
+            :referencia="(checkoutResult as any).referencia"
+            :loading="checkoutLoading"
+            @retry="retryCheckout"
+            @switch="switchToReferencia"
+          />
+
+          <!-- Pendente (REFERENCIA) - exibir dados para pagar no ATM -->
+          <PaymentInstructions
+            v-else
+            :pedido="checkoutResult"
+            :telefone="buyerInfo.telefone"
+            :metodo-pagamento="buyerInfo.metodo"
+            :referencia-override="(checkoutResult as any).referencia"
+            :entidade-override="(checkoutResult as any).entidade"
+          />
+        </div>
       </div>
     </div>
 
@@ -149,7 +167,9 @@ import AtLoader from './AtLoader.vue';
 import StepLoteSelection from './steps/StepLoteSelection.vue';
 import StepQuantitySelection from './steps/StepQuantitySelection.vue';
 import StepPayment from './steps/StepPayment.vue';
-import PaymentStatusPolling from '../features/checkout/components/PaymentStatusPolling.vue';
+import PaymentInstructions from '../features/checkout/components/PaymentInstructions.vue';
+import TicketDisplay from '../features/checkout/components/TicketDisplay.vue';
+import PaymentFailed from '../features/checkout/components/PaymentFailed.vue';
 
 // Hooks
 import { useIdempotency } from '../features/checkout/hooks/useIdempotency';
@@ -308,16 +328,7 @@ async function confirmPurchase() {
   }
 }
 
-function handlePaymentComplete(bilhetes: any[]) {
-  console.log('[CheckoutWizard] Pagamento completo. Bilhetes recebidos:', bilhetes);
-  // Não fechamos automaticamente o modal; usuário deve clicar "Fechar" nos bilhetes
-  resetKey();
-  // (Opcional futuramente: poder emitir um evento de analytics aqui)
-}
-
-function handlePaymentError(error: Error) {
-  console.error('[CheckoutWizard] Erro no pagamento:', error);
-}
+// Polling removido — status tratado diretamente na resposta do checkout
 
 function handleClose() {
   // Reseta o estado antes de fechar
@@ -355,6 +366,14 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
 });
+
+function retryCheckout() {
+  // Recria o pedido imediatamente com uma NOVA chave idempotente, mantendo os dados
+  pedidoCriado.value = false;
+  checkoutResult.value = null;
+  // Permanecemos no step 3 e reusamos confirmPurchase para gerar um novo pedido
+  confirmPurchase();
+}
 </script>
 
 <style scoped>
