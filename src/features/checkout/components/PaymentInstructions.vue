@@ -59,7 +59,7 @@
     <!-- REFERENCIA - ATM/Internet Banking -->
     <div v-else class="pi-referencia">
       <div class="pi-header">
-        <AtIcon name="bank" class="pi-header-icon" />
+        <AtIcon class="pi-header-icon"><span>🏦</span></AtIcon>
         <h3>Pagamento por Referência Multicaixa</h3>
       </div>
 
@@ -80,7 +80,7 @@
                 @click="copyToClipboard(entidade)"
                 :title="copied ? 'Copiado!' : 'Copiar'"
               >
-                <AtIcon :name="copied ? 'check' : 'copy'" />
+                <AtIcon><span>{{ copied ? '✔️' : '📋' }}</span></AtIcon>
               </button>
             </div>
           </div>
@@ -94,8 +94,9 @@
                 class="pi-copy-btn"
                 @click="copyToClipboard(referencia)"
                 :title="copied ? 'Copiado!' : 'Copiar'"
+                :disabled="!referencia"
               >
-                <AtIcon :name="copied ? 'check' : 'copy'" />
+                <AtIcon><span>{{ copied ? '✔️' : '📋' }}</span></AtIcon>
               </button>
             </div>
           </div>
@@ -162,19 +163,33 @@ const isGPO = computed(() => props.metodoPagamento === 'GPO');
 
 // Dados de entidade e referência (com fallbacks)
 const referencia = computed(() => {
-  const r = props.referenciaOverride
-    || (props.pedido as any)?.pagamento?.referencia
-    || (props.pedido as any)?.referencia
-    || '';
-  return String(r || '');
+  const p: any = props.pedido as any;
+  const candidates = [
+    props.referenciaOverride,
+    p?.pagamento?.referencia,
+    p?.referencia,
+    p?.paymentReference,
+    p?.referenciaPagamento,
+    p?.ref,
+  ].filter(Boolean) as string[];
+
+  // Escolhe a primeira com dígitos (>=6). Se vier algo como "REF: 755422731", extrai os dígitos.
+  for (const c of candidates) {
+    const onlyDigits = (c.match(/\d{6,}/)?.[0]) || '';
+    if (onlyDigits) return onlyDigits;
+  }
+  return '';
 });
 
 const entidade = computed(() => {
-  const e = props.entidadeOverride
-    || (props.pedido as any)?.pagamento?.entidade
-    || (props.pedido as any)?.entidade
-    || '';
-  return String(e);
+  const p: any = props.pedido as any;
+  const candidates = [
+    props.entidadeOverride,
+    p?.pagamento?.entidade,
+    p?.entidade,
+    p?.paymentEntity,
+  ].filter(Boolean) as string[];
+  return String(candidates[0] || '');
 });
 
 const copyToClipboard = async (text: string) => {
