@@ -89,6 +89,29 @@ export async function getPedidoBilhetes(pedidoId: string): Promise<Bilhete[]> {
 }
 
 /**
+ * Busca um bilhete específico pelo código
+ * 
+ * @param codigo Código do bilhete (ex: GDSE-01329879)
+ * @returns Promise com o bilhete
+ */
+export async function getBilheteByCodigo(codigo: string): Promise<Bilhete> {
+  console.log('[PaymentService] Buscando bilhete por código:', codigo);
+
+  const response = await fetch(`${API_BASE_URL}/bilhetes/${codigo}`);
+
+  if (!response.ok) {
+    const error = new Error(`HTTP error! status: ${response.status}`);
+    console.error('[PaymentService] Erro ao buscar bilhete:', error);
+    throw error;
+  }
+
+  const raw = await response.json();
+  const normalized = normalizeBilhetes([raw]);
+  console.log('[PaymentService] Bilhete obtido:', normalized[0]);
+  return normalized[0];
+}
+
+/**
  * Cancela um pedido (se possível)
  * 
  * @param pedidoId ID do pedido

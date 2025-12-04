@@ -20,112 +20,93 @@
 
       <!-- Bilhete encontrado -->
       <div v-else-if="bilhete" class="bp-content">
-        <div class="bp-header">
-          <div class="bp-success-icon">
-            <AtIcon><span>✅</span></AtIcon>
+        <!-- Bilhete estilo térmica -->
+        <div class="thermal-ticket">
+          <!-- Logo/Título -->
+          <div class="tt-header">
+            <h1 class="tt-brand">ARENATICKET</h1>
+            <div class="tt-divider"></div>
+            <h2 class="tt-type">INGRESSO / BILHETE</h2>
           </div>
-          <h1>Seu Bilhete</h1>
-          <p class="bp-subtitle">Apresente este bilhete na entrada do evento</p>
-        </div>
 
-        <div class="bp-ticket-card">
-          <!-- Cabeçalho do bilhete -->
-          <div class="bp-ticket-header">
-            <h2>{{ displayTitulo(bilhete) }}</h2>
-            <AtBadge :variant="getBadgeVariant(bilhete.status)">
-              {{ getStatusLabel(bilhete.status) }}
-            </AtBadge>
+          <!-- Título do Evento -->
+          <h3 class="tt-event-title">{{ displayTitulo(bilhete) }}</h3>
+
+          <!-- Data/Hora -->
+          <div class="tt-info-group">
+            <div class="tt-label">DATA/HORA:</div>
+            <div class="tt-value">{{ displayData(bilhete) }}</div>
           </div>
+
+          <!-- Local -->
+          <div class="tt-info-group" v-if="displayLocal(bilhete)">
+            <div class="tt-label">LOCAL:</div>
+            <div class="tt-value">{{ displayLocal(bilhete) }}</div>
+          </div>
+
+          <!-- Lote/Setor -->
+          <div class="tt-info-group" v-if="bilhete.lote?.nome">
+            <div class="tt-label">LOTE/SETOR:</div>
+            <div class="tt-value">{{ bilhete.lote.nome }}</div>
+          </div>
+
+          <!-- Titular -->
+          <div class="tt-info-group">
+            <div class="tt-label">TITULAR:</div>
+            <div class="tt-value">{{ bilhete.compradorNome }}</div>
+          </div>
+
+          <div class="tt-divider-dashed"></div>
 
           <!-- QR Code -->
-          <div v-if="bilhete.codigoQR" class="bp-qr-section">
-            <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" class="bp-qr-image" />
-            <p class="bp-qr-label">Escaneie este código na entrada</p>
-          </div>
-          <div v-else class="bp-qr-placeholder">
-            <div class="bp-qr-skeleton">QR Code não disponível</div>
+          <div class="tt-qr-section">
+            <img 
+              v-if="bilhete.codigoQR" 
+              :src="bilhete.codigoQR" 
+              :alt="`QR Code - ${bilhete.codigoTicket}`" 
+              class="tt-qr-image" 
+            />
+            <div v-else class="tt-qr-placeholder">QR Code não disponível</div>
+            <div class="tt-qr-instruction">Apresente este código na entrada</div>
           </div>
 
           <!-- Código do bilhete -->
-          <div class="bp-ticket-code">
-            <label>Código do Bilhete:</label>
-            <div class="bp-code-value">
-              <strong>{{ formatCodigoBilhete(bilhete.codigoTicket) }}</strong>
-              <button
-                type="button"
-                class="bp-copy-btn"
-                @click="copyCode"
-                :title="copied ? 'Copiado!' : 'Copiar'"
-              >
-                <AtIcon><span>{{ copied ? '✔️' : '📋' }}</span></AtIcon>
-              </button>
-            </div>
+          <div class="tt-code-section">
+            <div class="tt-code">{{ formatCodigoBilhete(bilhete.codigoTicket) }}</div>
           </div>
 
-          <!-- Detalhes do evento -->
-          <div class="bp-details">
-            <div class="bp-detail-row">
-              <AtIcon><span>👤</span></AtIcon>
-              <div>
-                <span class="bp-detail-label">Titular</span>
-                <span class="bp-detail-value">{{ bilhete.compradorNome }}</span>
-              </div>
-            </div>
+          <div class="tt-divider-dashed"></div>
 
-            <div v-if="displayData(bilhete)" class="bp-detail-row">
-              <AtIcon><span>📅</span></AtIcon>
-              <div>
-                <span class="bp-detail-label">Data/Hora</span>
-                <span class="bp-detail-value">{{ displayData(bilhete) }}</span>
-              </div>
-            </div>
-
-            <div v-if="displayLocal(bilhete)" class="bp-detail-row">
-              <AtIcon><span>📍</span></AtIcon>
-              <div>
-                <span class="bp-detail-label">Local</span>
-                <span class="bp-detail-value">{{ displayLocal(bilhete) }}</span>
-              </div>
-            </div>
-
-            <div v-if="bilhete.lote?.nome" class="bp-detail-row">
-              <AtIcon><span>🎟️</span></AtIcon>
-              <div>
-                <span class="bp-detail-label">Lote/Setor</span>
-                <span class="bp-detail-value">{{ bilhete.lote.nome }}</span>
-              </div>
+          <!-- Rodapé -->
+          <div class="tt-footer">
+            <div class="tt-footer-line">Documento válido apenas com QR Code</div>
+            <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
+            <div class="tt-footer-info">
+              <div>Gerado via ArenaTicket • +244 925 813 939</div>
+              <div>www.arenaticket.gdse.ao</div>
             </div>
           </div>
+        </div>
 
-          <!-- Ações -->
-          <div class="bp-actions">
-            <AtButton
-              variant="secondary"
-              size="lg"
-              @click="downloadTicket"
-              :disabled="downloading"
-            >
-              <AtIcon><span>⬇️</span></AtIcon>
-              {{ downloading ? 'Gerando...' : 'Baixar Bilhete' }}
-            </AtButton>
-            <AtButton
-              variant="primary"
-              size="lg"
-              @click="shareWhatsApp"
-            >
-              <AtIcon><span>📤</span></AtIcon>
-              Compartilhar
-            </AtButton>
-          </div>
-
-          <!-- Aviso importante -->
-          <div class="bp-warning">
-            <AtIcon><span>ℹ️</span></AtIcon>
-            <p>
-              <strong>Importante:</strong> Guarde este link com segurança. 
-              Você precisará dele para acessar seu bilhete a qualquer momento.
-            </p>
-          </div>
+        <!-- Ações -->
+        <div class="bp-actions">
+          <AtButton
+            variant="secondary"
+            size="lg"
+            @click="downloadTicket"
+            :disabled="downloading"
+          >
+            <AtIcon><span>⬇️</span></AtIcon>
+            {{ downloading ? 'Gerando...' : 'Baixar Bilhete' }}
+          </AtButton>
+          <AtButton
+            variant="primary"
+            size="lg"
+            @click="shareWhatsApp"
+          >
+            <AtIcon><span>📤</span></AtIcon>
+            Compartilhar
+          </AtButton>
         </div>
 
         <!-- Link para voltar -->
@@ -148,7 +129,8 @@ import AtButton from '../components/AtButton.vue';
 import AtBadge from '../components/AtBadge.vue';
 import AtIcon from '../components/AtIcon.vue';
 import type { Bilhete } from '../features/checkout/types/checkout.types';
-import { getPedidoBilhetes } from '../features/checkout/services/paymentService';
+import { getBilheteByCodigo } from '../features/checkout/services/paymentService';
+import { fetchEventoDetalhes } from '../services/api';
 import { formatDataEvento } from '../features/checkout/utils/validators';
 
 const route = useRoute();
@@ -162,10 +144,10 @@ const downloading = ref(false);
 
 // Buscar bilhete pelo ID na URL
 const fetchBilhete = async () => {
-  const bilheteId = route.params.id as string;
+  const codigoBilhete = route.params.codigo as string;
   
-  if (!bilheteId) {
-    error.value = 'ID do bilhete não fornecido';
+  if (!codigoBilhete) {
+    error.value = 'Código do bilhete não fornecido';
     loading.value = false;
     return;
   }
@@ -174,16 +156,34 @@ const fetchBilhete = async () => {
     loading.value = true;
     error.value = null;
 
-    // Buscar bilhetes do pedido (pode retornar array)
-    const bilhetes = await getPedidoBilhetes(bilheteId);
+    // Buscar bilhete pelo código
+    const bilheteData = await getBilheteByCodigo(codigoBilhete);
     
-    if (!bilhetes || bilhetes.length === 0) {
+    if (!bilheteData) {
       error.value = 'Bilhete não encontrado ou ainda não disponível';
       return;
     }
 
-    // Pegar o primeiro bilhete (ou buscar pelo ID específico se necessário)
-    bilhete.value = bilhetes[0];
+    bilhete.value = bilheteData;
+    
+    // Se o evento não tem data completa, buscar detalhes do evento
+    if (bilhete.value.evento?.id && !bilhete.value.evento.dataEvento) {
+      try {
+        const eventoDetalhes = await fetchEventoDetalhes(bilhete.value.evento.id);
+        if (eventoDetalhes) {
+          // Atualizar informações do evento com os detalhes completos
+          bilhete.value.evento = {
+            ...bilhete.value.evento,
+            dataEvento: eventoDetalhes.dataHoraInicio || eventoDetalhes.dataEvento,
+            local: eventoDetalhes.local || bilhete.value.evento.local,
+            titulo: eventoDetalhes.titulo || eventoDetalhes.nome || bilhete.value.evento.titulo
+          };
+        }
+      } catch (eventoErr) {
+        console.warn('Não foi possível carregar detalhes do evento:', eventoErr);
+        // Não falhar se não conseguir carregar detalhes do evento
+      }
+    }
     
   } catch (err: any) {
     console.error('Erro ao buscar bilhete:', err);
@@ -199,9 +199,9 @@ const displayTitulo = (b: Bilhete): string => {
 };
 
 const displayData = (b: Bilhete): string => {
-  if (!b.evento?.dataHoraInicio) return '';
+  if (!b.evento?.dataEvento) return '';
   try {
-    return formatDataEvento(b.evento.dataHoraInicio);
+    return formatDataEvento(b.evento.dataEvento);
   } catch {
     return '';
   }
@@ -212,16 +212,27 @@ const displayLocal = (b: Bilhete): string => {
 };
 
 const formatCodigoBilhete = (codigo: string): string => {
-  // Formatar código com hífens para melhor legibilidade
-  // Ex: ABC123DEF456 -> ABC1-23DE-F456
+  // Formatar código: GDSE-01329879 -> GDSE - 0132 9879
   if (!codigo) return '';
-  if (codigo.length <= 4) return codigo;
   
-  const parts: string[] = [];
-  for (let i = 0; i < codigo.length; i += 4) {
-    parts.push(codigo.slice(i, i + 4));
+  // Separar prefixo (GDSE) e número
+  const match = codigo.match(/^([A-Z]+)-?(.+)$/);
+  if (!match) return codigo;
+  
+  const prefixo = match[1]; // GDSE
+  const numero = match[2].replace(/\D/g, ''); // Remove não-dígitos: 01329879
+  
+  if (numero.length < 4) {
+    return `${prefixo} - ${numero}`;
   }
-  return parts.join('-');
+  
+  // Dividir número em grupos de 4: 0132 9879
+  const grupos: string[] = [];
+  for (let i = 0; i < numero.length; i += 4) {
+    grupos.push(numero.slice(i, i + 4));
+  }
+  
+  return `${prefixo} - ${grupos.join(' ')}`;
 };
 
 const getStatusLabel = (status: string): string => {
@@ -568,6 +579,175 @@ onMounted(() => {
   font-size: 4rem;
 }
 
+/* Layout de impressora térmica */
+.thermal-ticket {
+  max-width: 400px;
+  margin: 0 auto 2rem auto;
+  background: white;
+  padding: 24px 20px;
+  border: 2px solid #000;
+  font-family: 'Courier New', Courier, monospace;
+  color: #000;
+}
+
+.tt-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tt-brand {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin: 0 0 8px 0;
+}
+
+.tt-divider {
+  width: 100%;
+  height: 2px;
+  background: #000;
+  margin: 8px 0;
+}
+
+.tt-divider-dashed {
+  width: 100%;
+  height: 1px;
+  border-top: 2px dashed #666;
+  margin: 20px 0;
+}
+
+.tt-type {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 8px 0 0 0;
+  letter-spacing: 1px;
+}
+
+.tt-event-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 20px 0;
+  line-height: 1.4;
+}
+
+.tt-info-group {
+  margin-bottom: 16px;
+}
+
+.tt-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.tt-value {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tt-qr-section {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.tt-qr-image {
+  width: 200px;
+  height: 200px;
+  border: 2px solid #000;
+  padding: 8px;
+  background: white;
+  display: block;
+  margin: 0 auto 12px auto;
+}
+
+.tt-qr-placeholder {
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+  color: #999;
+  font-size: 12px;
+}
+
+.tt-qr-instruction {
+  font-size: 11px;
+  text-align: center;
+}
+
+.tt-code-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.tt-code {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.tt-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.tt-footer-line {
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.tt-footer-info {
+  margin-top: 12px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.bp-actions {
+  display: flex;
+  gap: var(--spacing-3, 1rem);
+  margin: var(--spacing-6, 2rem) auto;
+  max-width: 400px;
+}
+
+.bp-actions button {
+  flex: 1;
+}
+
+.bp-footer {
+  text-align: center;
+  margin-top: var(--spacing-6, 2rem);
+}
+
+@media (max-width: 768px) {
+  .thermal-ticket {
+    max-width: 100%;
+    padding: 20px 16px;
+  }
+
+  .tt-brand {
+    font-size: 24px;
+  }
+
+  .tt-event-title {
+    font-size: 16px;
+  }
+
+  .tt-qr-image {
+    width: 180px;
+    height: 180px;
+  }
+
+  .bp-actions {
+    flex-direction: column;
+  }
+}
+
 .bp-error h2 {
   font-size: var(--font-size-2xl, 2rem);
   margin-bottom: var(--spacing-3, 1rem);
@@ -582,231 +762,5 @@ onMounted(() => {
 .bp-content {
   max-width: 600px;
   margin: 0 auto;
-}
-
-.bp-header {
-  text-align: center;
-  margin-bottom: var(--spacing-6, 2rem);
-}
-
-.bp-success-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto var(--spacing-3, 1rem);
-  font-size: 3rem;
-}
-
-.bp-header h1 {
-  font-size: var(--font-size-3xl, 2.5rem);
-  font-weight: 700;
-  margin: 0 0 var(--spacing-2, 0.5rem) 0;
-  color: var(--color-text-primary, #1a1a1a);
-}
-
-.bp-subtitle {
-  font-size: var(--font-size-base, 1rem);
-  color: var(--color-text-secondary, #666);
-  margin: 0;
-}
-
-.bp-ticket-card {
-  background: white;
-  border-radius: var(--radius-lg, 12px);
-  padding: var(--spacing-6, 2rem);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.bp-ticket-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  gap: var(--spacing-3, 1rem);
-  margin-bottom: var(--spacing-5, 1.75rem);
-  padding-bottom: var(--spacing-4, 1.5rem);
-  border-bottom: 2px solid var(--color-border, #e5e5e5);
-}
-
-.bp-ticket-header h2 {
-  font-size: var(--font-size-xl, 1.5rem);
-  font-weight: 600;
-  color: var(--color-text-primary, #1a1a1a);
-  margin: 0;
-  flex: 1;
-}
-
-.bp-qr-section {
-  text-align: center;
-  margin: var(--spacing-5, 1.75rem) 0;
-}
-
-.bp-qr-image {
-  width: 220px;
-  height: 220px;
-  border: 2px solid var(--color-border, #e5e5e5);
-  border-radius: var(--radius-md, 8px);
-  padding: var(--spacing-2, 0.5rem);
-  background: white;
-}
-
-.bp-qr-label {
-  margin-top: var(--spacing-2, 0.5rem);
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-}
-
-.bp-qr-placeholder {
-  text-align: center;
-  margin: var(--spacing-5, 1.75rem) 0;
-}
-
-.bp-qr-skeleton {
-  width: 220px;
-  height: 220px;
-  margin: 0 auto;
-  background: var(--color-bg-secondary, #f5f5f5);
-  border: 2px dashed var(--color-border, #e5e5e5);
-  border-radius: var(--radius-md, 8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-tertiary, #999);
-  font-size: var(--font-size-sm, 0.875rem);
-}
-
-.bp-ticket-code {
-  margin: var(--spacing-5, 1.75rem) 0;
-  padding: var(--spacing-4, 1.5rem);
-  background: var(--color-bg-secondary, #f5f5f5);
-  border-radius: var(--radius-md, 8px);
-}
-
-.bp-ticket-code label {
-  display: block;
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 600;
-  color: var(--color-text-secondary, #666);
-  margin-bottom: var(--spacing-2, 0.5rem);
-}
-
-.bp-code-value {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-2, 0.5rem);
-}
-
-.bp-code-value strong {
-  font-size: var(--font-size-lg, 1.25rem);
-  font-family: monospace;
-  color: var(--color-text-primary, #1a1a1a);
-  letter-spacing: 0.05em;
-}
-
-.bp-copy-btn {
-  background: var(--color-primary, #1e40af);
-  color: white;
-  border: none;
-  padding: var(--spacing-2, 0.5rem);
-  border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 1.25rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bp-copy-btn:hover {
-  background: var(--color-primary-dark, #1e3a8a);
-  transform: scale(1.05);
-}
-
-.bp-details {
-  margin: var(--spacing-5, 1.75rem) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4, 1.5rem);
-}
-
-.bp-detail-row {
-  display: flex;
-  align-items: start;
-  gap: var(--spacing-3, 1rem);
-}
-
-.bp-detail-row > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1, 0.25rem);
-}
-
-.bp-detail-label {
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 600;
-  color: var(--color-text-secondary, #666);
-}
-
-.bp-detail-value {
-  font-size: var(--font-size-base, 1rem);
-  color: var(--color-text-primary, #1a1a1a);
-}
-
-.bp-actions {
-  display: flex;
-  gap: var(--spacing-3, 1rem);
-  margin: var(--spacing-6, 2rem) 0;
-}
-
-.bp-actions button {
-  flex: 1;
-}
-
-.bp-warning {
-  display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  padding: var(--spacing-3, 1rem);
-  background: var(--color-warning-light, #fef3c7);
-  border: 1px solid var(--color-warning, #f59e0b);
-  border-radius: var(--radius-md, 8px);
-  margin-top: var(--spacing-5, 1.75rem);
-}
-
-.bp-warning p {
-  margin: 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-primary, #1a1a1a);
-  line-height: 1.5;
-}
-
-.bp-footer {
-  text-align: center;
-  margin-top: var(--spacing-6, 2rem);
-}
-
-@media (max-width: 768px) {
-  .bp-ticket-card {
-    padding: var(--spacing-4, 1.5rem);
-  }
-
-  .bp-ticket-header {
-    flex-direction: column;
-    gap: var(--spacing-2, 0.5rem);
-  }
-
-  .bp-ticket-header h2 {
-    font-size: var(--font-size-lg, 1.25rem);
-  }
-
-  .bp-actions {
-    flex-direction: column;
-  }
-
-  .bp-qr-image {
-    width: 180px;
-    height: 180px;
-  }
 }
 </style>
