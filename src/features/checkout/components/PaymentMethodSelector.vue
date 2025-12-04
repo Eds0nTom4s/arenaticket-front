@@ -11,16 +11,9 @@
         :class="{ 'pms-option--selected': modelValue === 'GPO' }"
         @click="selectMethod('GPO')"
       >
-        <div class="pms-option-icon">
-          <AtIcon name="mobile" />
-        </div>
+        <img src="/multicaixa_express.jpeg" alt="Multicaixa Express" class="pms-option-img" />
         <div class="pms-option-content">
           <h4>Multicaixa Express</h4>
-          <p>✨ Confirmação instantânea via app</p>
-          <span class="pms-badge pms-badge--instant">⚡ Instantâneo</span>
-        </div>
-        <div class="pms-option-check">
-          <AtIcon v-if="modelValue === 'GPO'" name="check-circle" />
         </div>
       </button>
 
@@ -31,30 +24,11 @@
         :class="{ 'pms-option--selected': modelValue === 'REFERENCIA' }"
         @click="selectMethod('REFERENCIA')"
       >
-        <div class="pms-option-icon">
-          <AtIcon name="bank" />
-        </div>
+        <img src="/Referencia_atm.jpeg" alt="Referência ATM" class="pms-option-img" />
         <div class="pms-option-content">
           <h4>Referência ATM</h4>
-          <p>Pagamento em ATM ou Internet Banking</p>
-        </div>
-        <div class="pms-option-check">
-          <AtIcon v-if="modelValue === 'REFERENCIA'" name="check-circle" />
         </div>
       </button>
-    </div>
-
-    <!-- Informações do método selecionado -->
-    <div v-if="modelValue" class="pms-info">
-      <AtIcon name="info" />
-      <p v-if="modelValue === 'GPO'">
-        <strong>✨ Novo:</strong> O pagamento via Multicaixa Express é processado instantaneamente!
-        Seus bilhetes serão gerados automaticamente após a confirmação no app.
-      </p>
-      <p v-else>
-        Você receberá uma referência de pagamento via SMS. Use-a em qualquer ATM Multicaixa
-        ou Internet Banking. A confirmação pode levar alguns minutos.
-      </p>
     </div>
   </div>
 </template>
@@ -78,40 +52,55 @@ const selectMethod = (method: MetodoPagamento) => {
 
 <style scoped>
 .payment-method-selector {
-  padding: var(--spacing-4, 1.5rem);
+  padding: 0;
 }
 
 .pms-title {
-  font-size: var(--font-size-lg, 1.25rem);
+  font-size: var(--font-size-base, 1rem);
   font-weight: 600;
   margin-bottom: var(--spacing-1, 0.25rem);
   color: var(--color-text-primary, #1a1a1a);
 }
 
 .pms-subtitle {
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-xs, 0.75rem);
   color: var(--color-text-secondary, #666);
-  margin-bottom: var(--spacing-4, 1.5rem);
+  margin-bottom: var(--spacing-2, 0.5rem);
 }
 
 .pms-options {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-3, 1rem);
-  margin-bottom: var(--spacing-4, 1.5rem);
+}
+
+@media (max-width: 768px) {
+  .pms-options {
+    gap: var(--spacing-2, 0.5rem);
+  }
 }
 
 .pms-option {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-3, 1rem);
-  padding: var(--spacing-4, 1.5rem);
+  gap: var(--spacing-2, 0.5rem);
+  padding: var(--spacing-3, 1rem);
   border: 2px solid var(--color-border, #e5e5e5);
   border-radius: var(--radius-md, 8px);
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
+  text-align: center;
+  min-height: 110px;
+}
+
+@media (max-width: 768px) {
+  .pms-option {
+    min-height: 85px;
+    padding: var(--spacing-2, 0.5rem);
+    gap: var(--spacing-1, 0.25rem);
+  }
 }
 
 .pms-option:hover {
@@ -124,38 +113,39 @@ const selectMethod = (method: MetodoPagamento) => {
   background: var(--color-primary-light, #eff6ff);
 }
 
-.pms-option-icon {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-background, #f9fafb);
+.pms-option-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
   border-radius: var(--radius-md, 8px);
-  color: var(--color-primary, #1e40af);
+  margin-bottom: var(--spacing-1, 0.25rem);
 }
 
-.pms-option--selected .pms-option-icon {
-  background: var(--color-primary, #1e40af);
-  color: white;
+@media (max-width: 768px) {
+  .pms-option-img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0;
+  }
 }
 
 .pms-option-content {
   flex: 1;
+  width: 100%;
 }
 
 .pms-option-content h4 {
-  font-size: var(--font-size-base, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
   font-weight: 600;
-  margin-bottom: var(--spacing-1, 0.25rem);
+  margin: 0;
   color: var(--color-text-primary, #1a1a1a);
+  line-height: 1.2;
 }
 
-.pms-option-content p {
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-  margin: 0;
+@media (max-width: 768px) {
+  .pms-option-content h4 {
+    font-size: var(--font-size-xs, 0.75rem);
+  }
 }
 
 .pms-badge {
@@ -187,40 +177,26 @@ const selectMethod = (method: MetodoPagamento) => {
 }
 
 .pms-option-check {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  color: var(--color-primary, #1e40af);
-}
-
-.pms-info {
-  display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  padding: var(--spacing-3, 1rem);
-  background: var(--color-info-light, #dbeafe);
-  border-radius: var(--radius-md, 8px);
-  border-left: 3px solid var(--color-info, #3b82f6);
-}
-
-.pms-info p {
-  margin: 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-primary, #1a1a1a);
-  line-height: 1.5;
+  display: none;
 }
 
 @media (max-width: 768px) {
-  .payment-method-selector {
-    padding: var(--spacing-3, 1rem);
+  .pms-options {
+    gap: var(--spacing-2, 0.5rem);
   }
-
+  
   .pms-option {
-    padding: var(--spacing-3, 1rem);
+    min-height: 100px;
+    padding: var(--spacing-2, 0.5rem);
   }
-
-  .pms-option-icon {
-    width: 40px;
-    height: 40px;
+  
+  .pms-option-img {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .pms-option-content h4 {
+    font-size: 0.8rem;
   }
 }
 </style>

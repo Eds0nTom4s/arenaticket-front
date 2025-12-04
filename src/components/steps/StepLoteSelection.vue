@@ -1,5 +1,6 @@
 <template>
   <div class="step-lote-selection">
+    <h4 class="step-title">Selecione o Lote</h4>
     <AtLoader v-if="loading" label="A carregar lotes..." />
     <div v-else-if="error" class="error-message">
       <p>{{ error }}</p>
@@ -116,6 +117,20 @@ onMounted(fetchLotes);
 </script>
 
 <style scoped>
+.step-lote-selection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.step-title {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-align: center;
+}
+
 .lote-list {
   display: flex;
   flex-direction: column;

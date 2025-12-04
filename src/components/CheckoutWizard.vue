@@ -378,13 +378,14 @@ function retryCheckout() {
 
 <style scoped>
 .cw-content {
-  min-height: 450px; /* Altura mínima consistente para evitar mudanças bruscas */
-  max-height: 600px; /* Altura máxima para scrolling controlado */
+  min-height: 300px;
+  max-height: none;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-4, 1.5rem);
+  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 1rem);
+  margin-bottom: 20px;
   overflow-y: auto;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transição suave */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scroll estilizado */
@@ -409,12 +410,12 @@ function retryCheckout() {
 .cw-footer {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3, 1rem);
+  gap: var(--spacing-2, 0.5rem);
   width: 100%;
-  padding: var(--spacing-4, 1.5rem);
+  padding: var(--spacing-3, 1rem);
   background: var(--color-background, #f9fafb);
   border-top: 1px solid var(--color-border, #e5e5e5);
-  min-height: 100px; /* Altura mínima consistente para footer */
+  flex-shrink: 0;
 }
 
 .cw-error {

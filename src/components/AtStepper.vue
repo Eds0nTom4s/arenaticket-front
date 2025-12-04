@@ -38,9 +38,9 @@ defineProps({
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
   border-bottom: 1px solid var(--color-neutral-200);
-  margin-bottom: var(--space-lg);
+  margin-bottom: 0;
 }
 
 .at-stepper__step {

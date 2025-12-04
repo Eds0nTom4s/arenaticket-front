@@ -1,5 +1,6 @@
 <template>
   <div class="step-payment">
+    <h4 class="step-title">Dados de Pagamento</h4>
     <AtInput
       id="nome"
       label="Nome completo"
@@ -17,15 +18,6 @@
       placeholder="9XXXXXXXX"
       type="tel"
       required
-    />
-    
-    <AtInput
-      id="email"
-      label="Email (opcional)"
-      :model-value="modelValue.email"
-      @update:modelValue="update('email', $event)"
-      placeholder="seu@email.com"
-      type="email"
     />
     
     <!-- Novo componente de seleção de método de pagamento -->
@@ -82,7 +74,21 @@ const telefoneError = computed(() => {
 .step-payment {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4, 1.5rem);
+  gap: var(--spacing-3, 1rem);
+}
+
+.step-title {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .step-payment {
+    gap: var(--spacing-2, 0.5rem);
+  }
 }
 
 .sp-error {

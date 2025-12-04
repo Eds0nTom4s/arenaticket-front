@@ -1,5 +1,6 @@
 <template>
   <div class="step-quantity-selection">
+    <h4 class="step-title">Quantidade de Bilhetes</h4>
     <div class="quantity-selector-wrapper">
       <AtQuantitySelector
         :model-value="modelValue"
@@ -50,6 +51,16 @@ function formatPrice(price: number) {
   gap: var(--space-xl);
   padding: var(--space-lg) 0;
 }
+
+.step-title {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-align: center;
+  width: 100%;
+}
+
 .quantity-selector-wrapper {
   display: flex;
   flex-direction: column;
