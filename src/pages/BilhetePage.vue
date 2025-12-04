@@ -464,7 +464,7 @@ const generateTicketCanvas = (b: Bilhete, callback: (canvas: HTMLCanvasElement) 
   const qrY = y;
 
   const finalizar = () => {
-    let finalY = qrY + qrSize + 20;
+    let finalY = qrY + qrSize + 45;
 
     ctx.textAlign = 'center';
     ctx.font = 'bold 24px monospace';
