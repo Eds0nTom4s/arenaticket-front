@@ -11,6 +11,7 @@
           <ul>
             <li><a href="#">Meus Bilhetes</a></li>
             <li><a href="#">Ajuda</a></li>
+            <li><a href="https://admin.arenaticket.gdse.ao" target="_blank">Administração</a></li>
           </ul>
         </nav>
       </aside>

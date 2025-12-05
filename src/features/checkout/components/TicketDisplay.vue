@@ -13,60 +13,185 @@
         <div
           v-for="(bilhete, index) in bilhetes"
           :key="bilhete.id"
-          class="td-ticket-card td-slide"
+          class="td-slide"
         >
-          <div class="td-ticket-header">
-            <div>
-              <h3>{{ displayTitulo(bilhete) }}</h3>
-              <span class="td-lote">{{ bilhete.lote?.nome || 'Lote' }}</span>
+          <!-- Bilhete estilo térmico -->
+          <div class="thermal-ticket">
+            <div class="tt-badge-container">
+              <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
             </div>
-            <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
-          </div>
 
-          <div class="td-ticket-qr">
-            <template v-if="bilhete.codigoQR">
-              <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" />
-            </template>
-            <template v-else>
-              <div class="td-qr-skeleton">QR não disponível</div>
-            </template>
-          </div>
+            <div class="tt-header">
+              <router-link to="/" class="tt-brand-link">
+                <h1 class="tt-brand">ARENATICKET</h1>
+              </router-link>
+              <div class="tt-divider"></div>
+              <h2 class="tt-type">INGRESSO / BILHETE</h2>
+            </div>
 
-          <div class="td-ticket-code">
-            <label>Código do Bilhete:</label>
-            <div class="td-code-value">
-              <strong>{{ formatCodigoBilhete(bilhete.codigoTicket) }}</strong>
+            <h3 class="tt-event-title">{{ displayTitulo(bilhete) }}</h3>
+
+            <div class="tt-info-group">
+              <div class="tt-label">DATA/HORA:</div>
+              <div class="tt-value">{{ displayData(bilhete) }}</div>
+            </div>
+
+            <div class="tt-info-group" v-if="displayLocal(bilhete)">
+              <div class="tt-label">LOCAL:</div>
+              <div class="tt-value">{{ displayLocal(bilhete) }}</div>
+            </div>
+
+            <div class="tt-info-group" v-if="bilhete.lote?.nome">
+              <div class="tt-label">LOTE/SETOR:</div>
+              <div class="tt-value">{{ bilhete.lote.nome }}</div>
+            </div>
+
+            <div class="tt-info-group">
+              <div class="tt-label">TITULAR:</div>
+              <div class="tt-value">{{ bilhete.compradorNome }}</div>
+            </div>
+
+            <div class="tt-divider-dashed"></div>
+
+            <div class="tt-qr-section">
+              <img 
+                v-if="bilhete.codigoQR" 
+                :src="bilhete.codigoQR" 
+                :alt="`QR Code - ${bilhete.codigoTicket}`" 
+                class="tt-qr-image" 
+              />
+              <div v-else class="tt-qr-placeholder">QR Code não disponível</div>
+              <div class="tt-qr-instruction">Apresente este código na entrada</div>
+            </div>
+
+            <div class="tt-code-section">
+              <div class="tt-code">{{ formatCodigoBilhete(bilhete.codigoTicket) }}</div>
               <button
                 type="button"
-                class="td-copy-btn"
+                class="tt-copy-btn"
                 @click="copyCode(bilhete.codigoTicket)"
                 :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
               >
-                <AtIcon><span>{{ copiedCodes[bilhete.id] ? '✔️' : '📋' }}</span></AtIcon>
+                {{ copiedCodes[bilhete.id] ? '✔️ Copiado' : '📋 Copiar' }}
               </button>
             </div>
+
+            <div class="tt-divider-dashed"></div>
+
+            <div class="tt-footer">
+              <div class="tt-footer-line">Documento válido apenas com QR Code</div>
+              <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
+              <div class="tt-footer-info">
+                Gerado via ArenaTicket • +244 925 813 939<br>
+                www.arenaticket.gdse.ao
+              </div>
+            </div>
+
+            <div class="tt-actions">
+              <AtButton
+                variant="secondary"
+                size="sm"
+                @click="downloadTicket(bilhete)"
+              >
+                <AtIcon><span>⬇️</span></AtIcon>
+                Baixar
+              </AtButton>
+              <AtButton
+                variant="primary"
+                size="sm"
+                @click="shareWhatsApp(bilhete)"
+              >
+                <AtIcon><span>📤</span></AtIcon>
+                WhatsApp
+              </AtButton>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="td-carousel-controls" aria-hidden="false">
+        <button class="td-carousel-btn prev" @click="prev" aria-label="Bilhete anterior">‹</button>
+        <button class="td-carousel-btn next" @click="next" aria-label="Próximo bilhete">›</button>
+      </div>
+    </div>
+
+    <div v-else class="td-tickets-grid">
+      <div
+        v-for="(bilhete, index) in bilhetes"
+        :key="bilhete.id"
+      >
+        <!-- Bilhete estilo térmico -->
+        <div class="thermal-ticket">
+          <div class="tt-badge-container">
+            <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
           </div>
 
-          <div class="td-ticket-details">
-            <div class="td-detail-row">
-              <AtIcon><span>👤</span></AtIcon>
-              <span>{{ bilhete.compradorNome }}</span>
-            </div>
-            <div class="td-detail-row">
-              <AtIcon><span>📅</span></AtIcon>
-              <span>{{ displayData(bilhete) }}</span>
-            </div>
-            <div class="td-detail-row">
-              <AtIcon><span>📍</span></AtIcon>
-              <span>{{ displayLocal(bilhete) }}</span>
-            </div>
-            <div class="td-detail-row">
-              <AtIcon><span>🎟️</span></AtIcon>
-              <span>{{ bilhete.lote?.nome || 'Lote' }}</span>
+          <div class="tt-header">
+            <router-link to="/" class="tt-brand-link">
+              <h1 class="tt-brand">ARENATICKET</h1>
+            </router-link>
+            <div class="tt-divider"></div>
+            <h2 class="tt-type">INGRESSO / BILHETE</h2>
+          </div>
+
+          <h3 class="tt-event-title">{{ displayTitulo(bilhete) }}</h3>
+
+          <div class="tt-info-group">
+            <div class="tt-label">DATA/HORA:</div>
+            <div class="tt-value">{{ displayData(bilhete) }}</div>
+          </div>
+
+          <div class="tt-info-group" v-if="displayLocal(bilhete)">
+            <div class="tt-label">LOCAL:</div>
+            <div class="tt-value">{{ displayLocal(bilhete) }}</div>
+          </div>
+
+          <div class="tt-info-group" v-if="bilhete.lote?.nome">
+            <div class="tt-label">LOTE/SETOR:</div>
+            <div class="tt-value">{{ bilhete.lote.nome }}</div>
+          </div>
+
+          <div class="tt-info-group">
+            <div class="tt-label">TITULAR:</div>
+            <div class="tt-value">{{ bilhete.compradorNome }}</div>
+          </div>
+
+          <div class="tt-divider-dashed"></div>
+
+          <div class="tt-qr-section">
+            <img 
+              v-if="bilhete.codigoQR" 
+              :src="bilhete.codigoQR" 
+              :alt="`QR Code - ${bilhete.codigoTicket}`" 
+              class="tt-qr-image" 
+            />
+            <div v-else class="tt-qr-placeholder">QR Code não disponível</div>
+            <div class="tt-qr-instruction">Apresente este código na entrada</div>
+          </div>
+
+          <div class="tt-code-section">
+            <div class="tt-code">{{ formatCodigoBilhete(bilhete.codigoTicket) }}</div>
+            <button
+              type="button"
+              class="tt-copy-btn"
+              @click="copyCode(bilhete.codigoTicket)"
+              :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
+            >
+              {{ copiedCodes[bilhete.id] ? '✔️ Copiado' : '📋 Copiar' }}
+            </button>
+          </div>
+
+          <div class="tt-divider-dashed"></div>
+
+          <div class="tt-footer">
+            <div class="tt-footer-line">Documento válido apenas com QR Code</div>
+            <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
+            <div class="tt-footer-info">
+              Gerado via ArenaTicket • +244 925 813 939<br>
+              www.arenaticket.gdse.ao
             </div>
           </div>
 
-          <div class="td-ticket-actions">
+          <div class="tt-actions">
             <AtButton
               variant="secondary"
               size="sm"
@@ -84,88 +209,6 @@
               WhatsApp
             </AtButton>
           </div>
-        </div>
-      </div>
-      <div class="td-carousel-controls" aria-hidden="false">
-        <button class="td-carousel-btn prev" @click="prev" aria-label="Bilhete anterior">‹</button>
-        <button class="td-carousel-btn next" @click="next" aria-label="Próximo bilhete">›</button>
-      </div>
-    </div>
-
-    <div v-else class="td-tickets-grid">
-      <div
-        v-for="(bilhete, index) in bilhetes"
-        :key="bilhete.id"
-        class="td-ticket-card"
-      >
-        <div class="td-ticket-header">
-          <div>
-            <h3>{{ displayTitulo(bilhete) }}</h3>
-            <span class="td-lote">{{ bilhete.lote?.nome || 'Lote' }}</span>
-          </div>
-          <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
-        </div>
-
-        <div class="td-ticket-qr">
-          <template v-if="bilhete.codigoQR">
-            <img :src="bilhete.codigoQR" :alt="`QR Code - ${bilhete.codigoTicket}`" />
-          </template>
-          <template v-else>
-            <div class="td-qr-skeleton">QR não disponível</div>
-          </template>
-        </div>
-
-        <div class="td-ticket-code">
-          <label>Código do Bilhete:</label>
-          <div class="td-code-value">
-            <strong>{{ formatCodigoBilhete(bilhete.codigoTicket) }}</strong>
-            <button
-              type="button"
-              class="td-copy-btn"
-              @click="copyCode(bilhete.codigoTicket)"
-              :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
-            >
-              <AtIcon><span>{{ copiedCodes[bilhete.id] ? '✔️' : '📋' }}</span></AtIcon>
-            </button>
-          </div>
-        </div>
-
-        <div class="td-ticket-details">
-          <div class="td-detail-row">
-            <AtIcon><span>👤</span></AtIcon>
-            <span>{{ bilhete.compradorNome }}</span>
-          </div>
-          <div class="td-detail-row">
-            <AtIcon><span>📅</span></AtIcon>
-            <span>{{ displayData(bilhete) }}</span>
-          </div>
-          <div class="td-detail-row">
-            <AtIcon><span>📍</span></AtIcon>
-            <span>{{ displayLocal(bilhete) }}</span>
-          </div>
-          <div class="td-detail-row">
-            <AtIcon><span>🎟️</span></AtIcon>
-            <span>{{ bilhete.lote?.nome || 'Lote' }}</span>
-          </div>
-        </div>
-
-        <div class="td-ticket-actions">
-          <AtButton
-            variant="secondary"
-            size="sm"
-            @click="downloadTicket(bilhete)"
-          >
-            <AtIcon><span>⬇️</span></AtIcon>
-            Baixar
-          </AtButton>
-          <AtButton
-            variant="primary"
-            size="sm"
-            @click="shareWhatsApp(bilhete)"
-          >
-            <AtIcon><span>📤</span></AtIcon>
-            WhatsApp
-          </AtButton>
         </div>
       </div>
     </div>
@@ -289,81 +332,203 @@ const copyCode = async (codigo: string) => {
 };
 
 const downloadTicket = (bilhete: Bilhete) => {
-  // Criar canvas para gerar imagem do bilhete
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Configurar tamanho (formato A6 landscape)
-  canvas.width = 800;
-  canvas.height = 600;
+  canvas.width = 600;
+  canvas.height = 900;
 
-  // Background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Borda
-  ctx.strokeStyle = '#1e40af';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-  // Cabeçalho enxuto: rótulo pequeno + título do evento grande (sem redundância)
-  const tituloEvento = displayTitulo(bilhete);
-  ctx.fillStyle = '#1a1a1a';
+  ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
-  ctx.font = '600 14px Arial';
-  ctx.fillText('Bilhete de Entrada', canvas.width / 2, 48);
-  ctx.font = '700 34px Arial';
-  ctx.fillText(tituloEvento, canvas.width / 2, 88);
+  ctx.font = 'bold 42px Arial';
+  ctx.fillText('ARENATICKET', canvas.width / 2, 60);
+  
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(40, 80);
+  ctx.lineTo(canvas.width - 40, 80);
+  ctx.stroke();
 
-  // Bloco de detalhes (exibir somente quando houver informação)
-  ctx.textAlign = 'left';
-  ctx.font = '16px Arial';
-  const detalhes: Array<[string, string]> = [];
-  const localStr = displayLocal(bilhete);
-  const dataStr = displayData(bilhete);
-  if (localStr && localStr.trim().length > 0) detalhes.push(['Local', localStr]);
-  if (dataStr && !['Data não disponível', 'Data inválida'].includes(dataStr)) detalhes.push(['Data', dataStr]);
-  if (bilhete.lote?.nome) detalhes.push(['Lote', bilhete.lote.nome]);
-  detalhes.push(['Comprador', bilhete.compradorNome]);
+  ctx.font = '600 20px Arial';
+  ctx.fillText('INGRESSO / BILHETE', canvas.width / 2, 110);
 
-  let y = 140;
-  detalhes.forEach(([label, value]) => {
-    ctx.fillText(`${label}: ${value}`, 50, y);
-    y += 28;
+  let y = 150;
+  
+  const tituloEvento = displayTitulo(bilhete);
+  ctx.font = 'bold 28px Arial';
+  
+  const palavras = tituloEvento.split(' ');
+  let linha = '';
+  const linhas: string[] = [];
+  const maxWidth = canvas.width - 80;
+  
+  palavras.forEach((palavra) => {
+    const testeLinha = linha + palavra + ' ';
+    const metrics = ctx.measureText(testeLinha);
+    if (metrics.width > maxWidth && linha.length > 0) {
+      linhas.push(linha.trim());
+      linha = palavra + ' ';
+    } else {
+      linha = testeLinha;
+    }
+  });
+  linhas.push(linha.trim());
+  
+  linhas.forEach((l) => {
+    ctx.fillText(l, canvas.width / 2, y);
+    y += 35;
   });
 
-  // Código do bilhete em destaque
-  ctx.textAlign = 'center';
-  ctx.font = '700 28px monospace';
-  ctx.fillText(`Código: ${formatCodigoBilhete(bilhete.codigoTicket)}`, canvas.width / 2, 300);
+  y += 15;
 
-  // Função para finalizar e baixar (roda-pés discretos)
+  ctx.textAlign = 'left';
+  ctx.font = '18px Arial';
+  
+  const dataStr = displayData(bilhete);
+  if (dataStr) {
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('DATA/HORA:', 40, y);
+    ctx.font = '18px Arial';
+    ctx.fillText(dataStr, 40, y + 25);
+    y += 55;
+  }
+
+  const localStr = displayLocal(bilhete);
+  if (localStr && localStr.trim().length > 0) {
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('LOCAL:', 40, y);
+    ctx.font = '18px Arial';
+    
+    const palavrasLocal = localStr.split(' ');
+    let linhaLocal = '';
+    const linhasLocal: string[] = [];
+    
+    palavrasLocal.forEach((palavra) => {
+      const testeLinha = linhaLocal + palavra + ' ';
+      const metrics = ctx.measureText(testeLinha);
+      if (metrics.width > (canvas.width - 80) && linhaLocal.length > 0) {
+        linhasLocal.push(linhaLocal.trim());
+        linhaLocal = palavra + ' ';
+      } else {
+        linhaLocal = testeLinha;
+      }
+    });
+    linhasLocal.push(linhaLocal.trim());
+    
+    linhasLocal.forEach((l, idx) => {
+      ctx.fillText(l, 40, y + 25 + (idx * 22));
+    });
+    y += 25 + (linhasLocal.length * 22) + 30;
+  }
+
+  if (bilhete.lote?.nome) {
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('LOTE/SETOR:', 40, y);
+    ctx.font = '18px Arial';
+    ctx.fillText(bilhete.lote.nome, 40, y + 25);
+    y += 55;
+  }
+
+  ctx.font = 'bold 16px Arial';
+  ctx.fillText('TITULAR:', 40, y);
+  ctx.font = '18px Arial';
+  ctx.fillText(bilhete.compradorNome.toUpperCase(), 40, y + 25);
+  y += 55;
+
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(40, y);
+  ctx.lineTo(canvas.width - 40, y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  y += 30;
+
+  const qrSize = 220;
+  const qrX = (canvas.width - qrSize) / 2;
+  const qrY = y;
+
   const finalizar = () => {
-    // Mensagem institucional discreta (esq) e assinatura ArenaTicket (dir)
+    let finalY = qrY + qrSize + 45;
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 24px monospace';
+    ctx.fillStyle = '#000000';
+    ctx.fillText(formatCodigoBilhete(bilhete.codigoTicket), canvas.width / 2, finalY);
+    finalY += 30;
+
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#333333';
+    ctx.fillText('Apresente este código na entrada', canvas.width / 2, finalY);
+    finalY += 40;
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(40, finalY);
+    ctx.lineTo(canvas.width - 40, finalY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    finalY += 25;
+
     ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText('Juntos Pela Vitória', 22, canvas.height - 26);
-    ctx.textAlign = 'right';
-    ctx.fillText('Gerado com @arenaticket - 925813939', canvas.width - 22, canvas.height - 26);
+    ctx.fillStyle = '#666666';
+    ctx.textAlign = 'center';
+    ctx.fillText('Documento válido apenas com QR Code', canvas.width / 2, finalY);
+    finalY += 18;
+    ctx.fillText('Não transferível | Sujeito a verificação', canvas.width / 2, finalY);
+    finalY += 25;
+
+    ctx.font = '11px Arial';
+    ctx.fillStyle = '#999999';
+    ctx.fillText('Gerado via ArenaTicket • +244 925 813 939', canvas.width / 2, finalY);
+    finalY += 15;
+    ctx.fillText('www.arenaticket.gdse.ao', canvas.width / 2, finalY);
 
     downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
   };
 
-  // QR Code (se houver)
   if (bilhete.codigoQR) {
     const img = new Image();
     img.onload = () => {
-      ctx.drawImage(img, canvas.width / 2 - 100, 330, 200, 200);
+      ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10);
       finalizar();
     };
     img.onerror = () => {
-      console.warn('Falha ao carregar QR; baixando sem imagem.');
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(qrX + 2, qrY + 2, qrSize - 4, qrSize - 4);
+      ctx.fillStyle = '#999999';
+      ctx.textAlign = 'center';
+      ctx.font = '16px Arial';
+      ctx.fillText('QR Code', canvas.width / 2, qrY + qrSize / 2);
+      ctx.fillText('não disponível', canvas.width / 2, qrY + qrSize / 2 + 20);
       finalizar();
     };
     img.src = bilhete.codigoQR;
   } else {
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(qrX + 2, qrY + 2, qrSize - 4, qrSize - 4);
+    ctx.fillStyle = '#999999';
+    ctx.textAlign = 'center';
+    ctx.font = '16px Arial';
+    ctx.fillText('QR Code', canvas.width / 2, qrY + qrSize / 2);
+    ctx.fillText('não disponível', canvas.width / 2, qrY + qrSize / 2 + 20);
     finalizar();
   }
 };
@@ -426,27 +591,32 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 
 .td-tickets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--spacing-4, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--spacing-6, 2rem);
   margin-bottom: var(--spacing-6, 2rem);
 }
 
-/* Carrossel inline */
 .td-carousel {
   position: relative;
   width: 100%;
   overflow: hidden;
   margin-bottom: var(--spacing-6, 2rem);
 }
+
 .td-carousel-track {
   display: flex;
   transition: transform 0.3s ease-in-out;
   width: 100%;
 }
+
 .td-slide {
   flex: 0 0 100%;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--spacing-2, 0.5rem);
 }
+
 .td-carousel-controls {
   position: absolute;
   top: 50%;
@@ -456,159 +626,207 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   justify-content: space-between;
   transform: translateY(-50%);
   pointer-events: none;
+  padding: 0 var(--spacing-2, 0.5rem);
 }
+
 .td-carousel-btn {
   pointer-events: auto;
   background: rgba(0,0,0,0.5);
   color: #fff;
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
-}
-
-.td-ticket-card {
-  background: white;
-  border: 2px solid var(--color-border, #e5e5e5);
-  border-radius: var(--radius-lg, 12px);
-  padding: var(--spacing-4, 1.5rem);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.td-ticket-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.td-ticket-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--spacing-4, 1.5rem);
-  padding-bottom: var(--spacing-3, 1rem);
-  border-bottom: 1px solid var(--color-border, #e5e5e5);
-}
-
-.td-ticket-header h3 {
-  font-size: var(--font-size-lg, 1.25rem);
-  font-weight: 600;
-  margin: 0 0 var(--spacing-1, 0.25rem) 0;
-  color: var(--color-text-primary, #1a1a1a);
-}
-
-.td-lote {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: var(--font-size-xs, 0.75rem);
-  background: var(--color-primary-light, #eff6ff);
-  color: var(--color-primary, #1e40af);
-  border-radius: var(--radius-sm, 4px);
-  font-weight: 500;
-}
-
-.td-ticket-qr {
-  display: flex;
-  justify-content: center;
-  padding: var(--spacing-4, 1.5rem);
-  background: var(--color-background, #f9fafb);
-  border-radius: var(--radius-md, 8px);
-  margin-bottom: var(--spacing-4, 1.5rem);
-}
-
-.td-ticket-qr img {
-  width: 200px;
-  height: 200px;
-  border: 2px solid var(--color-border, #e5e5e5);
-  border-radius: var(--radius-sm, 4px);
-}
-
-.td-ticket-code {
-  margin-bottom: var(--spacing-4, 1.5rem);
-}
-
-.td-ticket-code label {
-  display: block;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-  margin-bottom: var(--spacing-1, 0.25rem);
-}
-
-.td-code-value {
+  font-size: 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-3, 1rem);
-  background: var(--color-background, #f9fafb);
-  border: 1px solid var(--color-border, #e5e5e5);
-  border-radius: var(--radius-md, 8px);
+  justify-content: center;
+  transition: background 0.2s;
 }
 
-.td-code-value strong {
-  font-size: var(--font-size-lg, 1.25rem);
-  font-family: monospace;
-  color: var(--color-text-primary, #1a1a1a);
+.td-carousel-btn:hover {
+  background: rgba(0,0,0,0.7);
 }
 
-.td-copy-btn {
-  padding: var(--spacing-2, 0.5rem);
+/* Modelo térmico */
+.thermal-ticket {
+  max-width: 450px;
+  margin: 0 auto;
   background: white;
-  border: 1px solid var(--color-border, #e5e5e5);
-  border-radius: var(--radius-sm, 4px);
+  padding: 24px 20px;
+  border: 2px solid #000;
+  font-family: 'Courier New', Courier, monospace;
+  color: #000;
+  position: relative;
+}
+
+.tt-badge-container {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.tt-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tt-brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  transition: opacity 0.2s;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.td-copy-btn:hover {
-  background: var(--color-primary-light, #eff6ff);
-  border-color: var(--color-primary, #1e40af);
+.tt-brand-link:hover {
+  opacity: 0.7;
 }
 
-.td-ticket-details {
+.tt-brand-link:active {
+  opacity: 0.5;
+}
+
+.tt-brand {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin: 0 0 8px 0;
+}
+
+.tt-divider {
+  width: 100%;
+  height: 2px;
+  background: #000;
+  margin: 8px 0;
+}
+
+.tt-divider-dashed {
+  width: 100%;
+  height: 1px;
+  border-top: 2px dashed #666;
+  margin: 20px 0;
+}
+
+.tt-type {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 8px 0 0 0;
+  letter-spacing: 1px;
+}
+
+.tt-event-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 20px 0;
+  line-height: 1.4;
+}
+
+.tt-info-group {
+  margin-bottom: 16px;
+}
+
+.tt-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.tt-value {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tt-qr-section {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.tt-qr-image {
+  width: 200px;
+  height: 200px;
+  border: 2px solid #000;
+  padding: 8px;
+  background: white;
+  display: block;
+  margin: 0 auto 12px auto;
+}
+
+.tt-qr-placeholder {
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+  color: #999;
+  font-size: 12px;
+}
+
+.tt-qr-instruction {
+  font-size: 11px;
+  text-align: center;
+}
+
+.tt-code-section {
+  text-align: center;
+  margin: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2, 0.5rem);
-  margin-bottom: var(--spacing-4, 1.5rem);
-}
-
-.td-ticket-actions {
-  display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  justify-content: flex-end;
-  margin-top: var(--spacing-2, 0.5rem);
-}
-
-.td-ticket-actions > * {
-  flex: 0 0 auto;
-}
-
-.td-qr-skeleton {
-  width: 200px;
-  height: 200px;
-  display: flex;
+  gap: 12px;
   align-items: center;
+}
+
+.tt-code {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.tt-copy-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  transition: all 0.2s;
+}
+
+.tt-copy-btn:hover {
+  background: #f0f0f0;
+}
+
+.tt-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.tt-footer-line {
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.tt-footer-info {
+  margin-top: 12px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.tt-actions {
+  display: flex;
+  gap: var(--spacing-2, 0.5rem);
   justify-content: center;
-  background: repeating-linear-gradient(45deg,#f3f4f6,#f3f4f6 10px,#e5e7eb 10px,#e5e7eb 20px);
-  border: 2px dashed var(--color-border, #e5e5e5);
-  border-radius: var(--radius-sm, 4px);
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-family: monospace;
-}
-
-.td-detail-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2, 0.5rem);
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-}
-
-.td-detail-row svg {
-  width: 16px;
-  height: 16px;
-  color: var(--color-primary, #1e40af);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
 }
 
 .td-sms-confirmation {
@@ -690,9 +908,27 @@ const shareWhatsApp = (bilhete: Bilhete) => {
     font-size: var(--font-size-xl, 1.5rem);
   }
 
-  .td-ticket-qr img {
-    width: 150px;
-    height: 150px;
+  .thermal-ticket {
+    max-width: 100%;
+    padding: 20px 16px;
+  }
+
+  .tt-brand {
+    font-size: 24px;
+  }
+
+  .tt-event-title {
+    font-size: 16px;
+  }
+
+  .tt-qr-image {
+    width: 180px;
+    height: 180px;
+  }
+
+  .tt-qr-placeholder {
+    width: 180px;
+    height: 180px;
   }
 }
 </style>

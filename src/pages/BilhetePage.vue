@@ -24,7 +24,9 @@
         <div class="thermal-ticket">
           <!-- Logo/Título -->
           <div class="tt-header">
-            <h1 class="tt-brand">ARENATICKET</h1>
+            <router-link to="/" class="tt-brand-link">
+              <h1 class="tt-brand">ARENATICKET</h1>
+            </router-link>
             <div class="tt-divider"></div>
             <h2 class="tt-type">INGRESSO / BILHETE</h2>
           </div>
@@ -593,6 +595,22 @@ onMounted(() => {
 .tt-header {
   text-align: center;
   margin-bottom: 20px;
+}
+
+.tt-brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.tt-brand-link:hover {
+  opacity: 0.7;
+}
+
+.tt-brand-link:active {
+  opacity: 0.5;
 }
 
 .tt-brand {
