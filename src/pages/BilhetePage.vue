@@ -85,7 +85,7 @@
             <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
             <div class="tt-footer-info">
               <div>Gerado via ArenaTicket • +244 925 813 939</div>
-              <div>www.arenaticket.gdse.ao</div>
+              <div>www.arenaticket.ao</div>
             </div>
           </div>
         </div>
@@ -501,7 +501,7 @@ const generateTicketCanvas = (b: Bilhete, callback: (canvas: HTMLCanvasElement) 
     ctx.fillStyle = '#999999';
     ctx.fillText('Gerado via ArenaTicket • +244 925 813 939', canvas.width / 2, finalY);
     finalY += 15;
-    ctx.fillText('www.arenaticket.gdse.ao', canvas.width / 2, finalY);
+    ctx.fillText('www.arenaticket.ao', canvas.width / 2, finalY);
 
     callback(canvas);
   };

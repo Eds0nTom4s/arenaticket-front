@@ -83,7 +83,7 @@
               <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
               <div class="tt-footer-info">
                 Gerado via ArenaTicket • +244 925 813 939<br>
-                www.arenaticket.gdse.ao
+                www.arenaticket.ao
               </div>
             </div>
 
@@ -187,7 +187,7 @@
             <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
             <div class="tt-footer-info">
               Gerado via ArenaTicket • +244 925 813 939<br>
-              www.arenaticket.gdse.ao
+              www.arenaticket.ao
             </div>
           </div>
 
@@ -240,7 +240,7 @@
           Precisa de ajuda? Entre em contato: <strong>925 813 939</strong>
         </p>
         <p class="td-thank-you">
-          Obrigado por apoiar o <strong>Grémio Desportivo Sagrada Esperança</strong>!
+          Obrigado por apoiar o <strong>Grupo Desportivo Sagrada Esperança</strong>!
         </p>
       </div>
 
@@ -490,7 +490,7 @@ const downloadTicket = (bilhete: Bilhete) => {
     ctx.fillStyle = '#999999';
     ctx.fillText('Gerado via ArenaTicket • +244 925 813 939', canvas.width / 2, finalY);
     finalY += 15;
-    ctx.fillText('www.arenaticket.gdse.ao', canvas.width / 2, finalY);
+    ctx.fillText('www.arenaticket.ao', canvas.width / 2, finalY);
 
     downloadCanvas(canvas, `bilhete-${bilhete.codigoTicket}.png`);
   };

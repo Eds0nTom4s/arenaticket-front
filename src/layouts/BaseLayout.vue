@@ -10,8 +10,8 @@
           <button class="at-menu-close" aria-label="Fechar menu" @click="openMenu = false">×</button>
           <ul>
             <li><a href="#">Meus Bilhetes</a></li>
-            <li><a href="#">Ajuda</a></li>
             <li><a href="https://admin.arenaticket.gdse.ao" target="_blank">Administração</a></li>
+            <li><a href="#">Ajuda</a></li>
           </ul>
         </nav>
       </aside>
