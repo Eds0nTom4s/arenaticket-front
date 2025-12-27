@@ -156,64 +156,15 @@ export function isLoteDisponivel(lote: {
 
 /**
  * Retorna mensagem de erro amigável para o usuário
- * Conforme documento ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt
+ * Conforme documento INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt
  * 
- * REGRA: Mensagens técnicas ficam apenas no console.error()
- * Usuário vê mensagem limpa e amigável
+ * REGRA IMPORTANTE:
+ * - Mensagens técnicas do backend são para logging APENAS
+ * - Usuário SEMPRE vê mensagem padronizada amigável
+ * - Detalhes técnicos ficam no console.error()
  */
 export function getFriendlyErrorMessage(error: any): string {
-  const status = error.response?.status;
-  const backendMessage = error.response?.data?.message || error.message || '';
-  
-  // 🔴 HTTP 402 Payment Required - Novo comportamento do backend
-  // Backend já retorna mensagem limpa e legível da AppyPay
-  if (status === 402) {
-    // Se backend enviou mensagem limpa, usar diretamente
-    if (backendMessage && backendMessage.length > 0) {
-      return backendMessage;
-    }
-    // Fallback genérico
-    return 'Erro ao processar o pagamento. Tente novamente ou contacte o apoio ao cliente.';
-  }
-  
-  // 🔴 HTTP 400 Bad Request - Dados inválidos
-  if (status === 400) {
-    // Usar mensagem do backend se disponível
-    if (backendMessage && backendMessage.length > 0) {
-      return backendMessage;
-    }
-    return 'Dados inválidos. Por favor, verifique as informações fornecidas.';
-  }
-  
-  // 🔴 HTTP 409 Conflict - Bilhetes não disponíveis
-  if (status === 409) {
-    return 'Bilhetes não disponíveis. Por favor, escolha outro lote ou quantidade.';
-  }
-  
-  // 🔴 HTTP 500 Internal Server Error
-  if (status === 500) {
-    // Usar mensagem do backend se disponível
-    if (backendMessage && backendMessage.length > 0) {
-      return backendMessage;
-    }
-    return 'Erro no servidor. Por favor, tente novamente em alguns instantes.';
-  }
-  
-  // 🔴 HTTP 503 Service Unavailable
-  if (status === 503) {
-    return 'Serviço temporariamente indisponível. Por favor, tente novamente.';
-  }
-  
-  // 🔴 Erros de rede (sem resposta do servidor)
-  if (!error.response) {
-    return 'Erro de conexão. Verifique sua internet e tente novamente.';
-  }
-  
-  // 🔴 Fallback: usar mensagem do backend ou genérica
-  if (backendMessage && backendMessage.length > 0) {
-    return backendMessage;
-  }
-  
-  // Mensagem genérica final
-  return 'Erro ao processar o pagamento. Tente novamente ou contacte o apoio ao cliente.';
+  // 🎯 MENSAGEM PADRONIZADA para TODOS os erros de pagamento
+  // Conforme INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt
+  return 'Erro ao processar o pagamento. Tente novamente.';
 }

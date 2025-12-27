@@ -1,0 +1,109 @@
+================================================================================
+INSTRUÇÕES PARA EQUIPE DO FRONTEND - TRATAMENTO DE ERROS DE PAGAMENTO
+Data: 27 de Dezembro de 2025
+================================================================================
+
+IMPORTANTE: REGRA GERAL DE TRATAMENTO DE ERROS
+================================================================================
+
+As mensagens vindas do backend são para TRATAMENTO INTERNO do frontend.
+
+O FRONTEND DEVE:
+✓ Capturar a mensagem de erro do backend
+✓ Registrar detalhes técnicos no console (SEM expor informações sensíveis)
+✓ Exibir mensagem AMIGÁVEL padronizada ao usuário
+
+================================================================================
+MENSAGEM PARA O USUÁRIO (INTERFACE)
+================================================================================
+
+SEMPRE exibir a mesma mensagem padronizada:
+
+┌───────────────────────────────────────┐
+│  ❌ Erro ao processar o pagamento     │
+│                                       │
+│  Tente novamente.                     │
+│                                       │
+│  Apoio ao Cliente:                    │
+│  📞 925 813 939                       │
+│                                       │
+│  [ Tentar Novamente ]                 │
+└───────────────────────────────────────┘
+
+NÃO EXIBIR AO USUÁRIO:
+✗ Mensagem técnica do backend
+✗ JSON de erro
+✗ Status HTTP (402, 400, 500)
+✗ Stack traces
+✗ Códigos de erro técnicos
+
+================================================================================
+LOGGING NO CONSOLE (PARA DEBUG)
+================================================================================
+
+Registrar no console.error():
+
+✓ Timestamp do erro
+✓ Status HTTP
+✓ Mensagem original do backend
+✓ Dados da requisição (COM MASCARAMENTO)
+
+MASCARAR INFORMAÇÕES SENSÍVEIS:
+- Telefone: 925813939 → 925***939
+- Email: joao@email.com → j***@email.com
+- Não logar: tokens, senhas, chaves de API
+
+Exemplo de log:
+console.error('Erro no checkout:', {
+  timestamp: '2025-12-27T17:53:43Z',
+  status: 402,
+  erro: 'As entradas de pagamento estão suspensas...',
+  telefone: '925***939',
+  eventoId: '9ae51f1c-1ab1-4736-a7a6-e94b19d3178a'
+});
+
+================================================================================
+ENDPOINTS AFETADOS
+================================================================================
+
+POST /api/v1/public/checkout
+
+Status de erro possíveis:
+- 400: Erro de validação
+- 402: Erro de pagamento
+- 500: Erro do servidor
+
+TODOS devem ser tratados da mesma forma:
+1. Exibir mensagem amigável padronizada
+2. Logar detalhes técnicos no console
+3. Oferecer botão "Tentar Novamente"
+
+================================================================================
+EXEMPLO DE IMPLEMENTAÇÃO
+================================================================================
+
+Ao receber erro da API:
+
+1. Capturar erro completo
+2. Logar no console (com mascaramento)
+3. Exibir mensagem padronizada
+4. Não expor detalhes técnicos na UI
+
+================================================================================
+INFORMAÇÕES DO BACKEND
+================================================================================
+
+O backend JÁ extrai mensagens limpas da AppyPay, mas essas mensagens
+são para uso INTERNO do frontend (logging/debug).
+
+A interface SEMPRE deve mostrar a mensagem padronizada amigável.
+
+================================================================================
+TELEFONE DE APOIO AO CLIENTE
+================================================================================
+
+925 813 939
+
+================================================================================
+FIM DAS INSTRUÇÕES
+================================================================================

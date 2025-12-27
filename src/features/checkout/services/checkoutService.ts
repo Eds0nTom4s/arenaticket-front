@@ -36,10 +36,10 @@ export async function createCheckout(
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         
-        // Extrair mensagem limpa do backend
-        const cleanMessage = errorData.message || `Erro HTTP ${response.status}`;
+        // Extrair mensagem do backend (para logging)
+        const backendMessage = errorData.message || `Erro HTTP ${response.status}`;
         
-        const error: any = new Error(cleanMessage);
+        const error: any = new Error(backendMessage);
         error.response = {
           status: response.status,
           data: errorData,
@@ -51,7 +51,7 @@ export async function createCheckout(
         // ❌ NUNCA fazer retry em erros de pagamento (402, 400, 401, 403)
         // Backend já cancelou a reserva e marcou pedido como FAILED
         if (
-          error.response.status === 402 || // Payment Required (novo comportamento)
+          error.response.status === 402 || // Payment Required
           error.response.status === 400 || // Bad Request
           error.response.status === 401 || // Unauthorized
           error.response.status === 403    // Forbidden
@@ -59,13 +59,13 @@ export async function createCheckout(
           error.isRetryable = false;
         }
         
-        // Log técnico detalhado (apenas no console)
+        // 📄 Log técnico detalhado (apenas console - conforme INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt)
         console.error('[CheckoutService] Erro na requisição:', {
           timestamp: new Date().toISOString(),
-          status: response.status,
-          message: cleanMessage,
-          data: errorData,
-          idempotencyKey,
+          httpStatus: response.status,
+          erroBackend: backendMessage, // Mensagem técnica do backend
+          errorData: errorData,
+          idempotencyKey, // Para rastreamento
         });
         
         throw error;

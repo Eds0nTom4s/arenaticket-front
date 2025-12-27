@@ -1,0 +1,153 @@
+================================================================================
+NOTA URGENTE PARA EQUIPE DO BACKEND
+Data: 27 de Dezembro de 2025
+================================================================================
+
+ASSUNTO: Mensagem de erro HTTP 402 não está sendo extraída corretamente
+
+================================================================================
+PROBLEMA IDENTIFICADO
+================================================================================
+
+O backend está retornando HTTP 402 Payment Required, mas a mensagem NÃO está
+limpa conforme especificado no documento ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt
+
+RESPOSTA ATUAL DO BACKEND (INCORRETA):
+---------------------------------------
+{
+  "timestamp": "2025-12-27T17:53:43.979527492+01:00",
+  "status": 402,
+  "error": "Payment Error",
+  "message": "Pagamento não autorizado: Erro AppyPay /charges: status=400 BAD_REQUEST body={\"error\":\"VALIDATION\",\"error_description\":\"As entradas de pagamento estão suspensas até que o processo de verificação da conta esteja concluído.\"}",
+  "path": "/api/v1/public/checkout"
+}
+
+RESPOSTA ESPERADA (CORRETA):
+----------------------------
+{
+  "timestamp": "2025-12-27T17:53:43.979527492+01:00",
+  "status": 402,
+  "error": "Payment Error",
+  "message": "As entradas de pagamento estão suspensas até que o processo de verificação da conta esteja concluído.",
+  "path": "/api/v1/public/checkout"
+}
+
+================================================================================
+O QUE PRECISA SER CORRIGIDO NO BACKEND
+================================================================================
+
+Conforme documento ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt (seção 1):
+
+1. ✅ Backend JÁ detecta erros 400/422 da AppyPay
+2. ❌ Backend NÃO está extraindo "error_description" corretamente
+3. ❌ Backend está retornando JSON técnico completo na mensagem
+
+ARQUIVO: AppyPayProvider.java
+MÉTODO: extrairMensagemErro(String errorBody)
+
+O método deve:
+- Fazer parse do JSON de erro da AppyPay
+- Extrair APENAS o campo "error_description"
+- Retornar string limpa SEM JSON técnico
+
+CÓDIGO ATUAL (PROVAVELMENTE):
+------------------------------
+return "Pagamento não autorizado: Erro AppyPay /charges: status=400 BAD_REQUEST body=" + errorBody;
+
+CÓDIGO CORRETO ESPERADO:
+-------------------------
+try {
+    JSONObject errorJson = new JSONObject(errorBody);
+    if (errorJson.has("error_description")) {
+        return errorJson.getString("error_description");
+    }
+    if (errorJson.has("message")) {
+        return errorJson.getString("message");
+    }
+} catch (Exception e) {
+    // fallback
+}
+return "Erro ao processar pagamento. Tente novamente.";
+
+================================================================================
+IMPACTO
+================================================================================
+
+ATUAL:
+- Usuário vê mensagem técnica com JSON completo
+- Experiência ruim (mensagem confusa e técnica)
+- Não segue padrão de UX definido
+
+APÓS CORREÇÃO:
+- Usuário vê mensagem limpa e compreensível
+- Mensagens diretas da AppyPay (ex: "conta suspensa", "saldo insuficiente")
+- Melhor experiência do usuário
+
+================================================================================
+WORKAROUND TEMPORÁRIO NO FRONTEND
+================================================================================
+
+✅ Frontend foi atualizado para extrair mensagem limpa do JSON embutido
+✅ Usuário agora vê mensagem correta MESMO com backend desatualizado
+⚠️  Mas o IDEAL é corrigir no backend conforme especificado
+
+================================================================================
+COMMIT DE REFERÊNCIA
+================================================================================
+
+Hash: b00f948
+Mensagem: "feat: melhorar extração de mensagens de erro da AppyPay - 
+          exibir error_description limpo ao usuário"
+
+Revisar o commit acima para ver como deve ser implementado.
+
+================================================================================
+ARQUIVOS DO BACKEND ENVOLVIDOS
+================================================================================
+
+1. AppyPayProvider.java
+   - Linha ~122-133: onStatus error handler
+   - Método: extrairMensagemErro(String errorBody)
+
+2. PedidoService.java
+   - Linha ~257-332: bloco catch
+   - Apenas repassa mensagem limpa (não precisa modificar)
+
+================================================================================
+TESTE PARA VALIDAR CORREÇÃO
+================================================================================
+
+REQUISIÇÃO:
+POST https://api.arenaticket.gdse.ao/api/v1/public/checkout
+{
+  "loteId": "9ae51f1c-1ab1-4736-a7a6-e94b19d3178a",
+  "quantidade": 2,
+  "compradorNome": "João Silva",
+  "compradorTelefone": "925813939",
+  "compradorEmail": "joao@email.com",
+  "metodoPagamento": "GPO"
+}
+
+RESPOSTA ESPERADA (se conta AppyPay suspensa):
+{
+  "status": 402,
+  "message": "As entradas de pagamento estão suspensas até que o processo de verificação da conta esteja concluído."
+}
+
+VALIDAÇÃO:
+- ✅ Campo "message" contém APENAS a mensagem limpa
+- ✅ SEM prefixos como "Pagamento não autorizado:"
+- ✅ SEM "body={...}" ou JSON embutido
+- ✅ Mensagem legível e direta para o usuário final
+
+================================================================================
+PRIORIDADE: ALTA
+ESFORÇO: BAIXO (apenas ajustar extração da mensagem)
+================================================================================
+
+Se tiverem dúvidas, consultar:
+- Documento: ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt
+- Seção: "1. PROBLEMA IDENTIFICADO" e "2. MUDANÇAS NO COMPORTAMENTO DA API"
+
+Equipe Frontend
+27/12/2025

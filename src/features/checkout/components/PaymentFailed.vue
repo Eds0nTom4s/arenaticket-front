@@ -43,8 +43,9 @@ const props = defineProps<{
 }>();
 
 const mensagemExibida = computed(() => {
-  // Mensagem padrão conforme documento ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt
-  return props.mensagem || 'Tente novamente ou contacte o apoio ao cliente.';
+  // Mensagem padrão conforme INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt
+  // SEMPRE exibir mensagem padronizada, não a mensagem técnica do backend
+  return 'Erro ao processar o pagamento. Tente novamente.';
 });
 </script>
 

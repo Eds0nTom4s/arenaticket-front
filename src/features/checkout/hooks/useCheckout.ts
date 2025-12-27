@@ -14,12 +14,26 @@ import { getFriendlyErrorMessage } from '../utils/validators';
 import { getPedidoBilhetes } from '../services/paymentService';
 
 /**
- * Mascara telefone para logging (exibe apenas primeiros 3 dígitos)
- * Exemplo: 923456789 -> 923******
+ * Mascara telefone para logging (protege dados sensíveis)
+ * Conforme INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt
+ * Exemplo: 925813939 -> 925***939
  */
 function maskTelefone(telefone: string): string {
-  if (!telefone || telefone.length < 3) return '***';
-  return telefone.slice(0, 3) + '******';
+  if (!telefone || telefone.length < 6) return '***';
+  const inicio = telefone.slice(0, 3);
+  const fim = telefone.slice(-3);
+  return `${inicio}***${fim}`;
+}
+
+/**
+ * Mascara email para logging (protege dados sensíveis)
+ * Exemplo: joao@email.com -> j***@email.com
+ */
+function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return '***@***';
+  const [local, domain] = email.split('@');
+  const maskedLocal = local.length > 1 ? local[0] + '***' : '***';
+  return `${maskedLocal}@${domain}`;
 }
 
 export function useCheckout() {
@@ -99,19 +113,20 @@ export function useCheckout() {
       const friendlyMessage = getFriendlyErrorMessage(err);
       error.value = friendlyMessage;
       
-      // 📄 Log técnico detalhado (apenas console - nunca exibir ao usuário)
-      console.error('[useCheckout] Erro ao criar pedido:', {
+      // 📄 Log técnico detalhado (APENAS console - conforme INSTRUCOES_FRONTEND_TRATAMENTO_ERROS.txt)
+      // Mensagem do backend é para DEBUG, NÃO para exibir ao usuário
+      console.error('[useCheckout] Erro no checkout:', {
         timestamp: new Date().toISOString(),
         httpStatus: err.response?.status,
-        backendMessage: err.response?.data?.message,
-        friendlyMessage: friendlyMessage,
+        erroBackend: err.response?.data?.message || err.message, // Mensagem técnica
+        mensagemUsuario: friendlyMessage, // Mensagem amigável exibida
         isRetryable: err.isRetryable ?? false,
-        requestData: {
+        dadosRequisicao: {
           loteId: data.loteId,
           quantidade: data.quantidade,
           compradorNome: data.compradorNome,
-          compradorTelefone: maskTelefone(data.compradorTelefone), // Mascarar telefone
-          compradorEmail: data.compradorEmail ? '***@***' : null,    // Mascarar email
+          telefone: maskTelefone(data.compradorTelefone), // Mascarado
+          email: data.compradorEmail ? maskEmail(data.compradorEmail) : null, // Mascarado
           metodoPagamento: data.metodoPagamento,
         },
         idempotencyKey,

@@ -53,3 +53,57 @@ Para garantir que o novo fluxo de checkout (wizard) está funcionando corretamen
     - Clique em "Comprar outro bilhete" para fechar o modal e resetar o estado.
     - Em qualquer etapa, use o botão "Voltar" ou a tecla `←` para navegar para a etapa anterior.
     - Pressione a tecla `ESC` para fechar o modal a qualquer momento.
+
+## Deploy
+
+Este projeto é um site estático hospedado no Amazon S3 e distribuído via CloudFront. Para efetuar deploy manual, siga os passos abaixo.
+
+### Pré-requisitos
+
+- **Node.js** (versão 18 ou superior)
+- **AWS CLI** instalado e configurado com credenciais de acesso ao bucket S3 e CloudFront
+- Acesso aos seguintes recursos AWS:
+  - Bucket S3: `arenaticket-gdse-prod-1763422384`
+  - CloudFront Distribution ID: `ER43YNOBKJ82H`
+
+### Passos para Deploy
+
+1.  **Configurar Variáveis de Ambiente:**
+    - Edite o arquivo `.env.production` com as variáveis necessárias (ex: `VITE_API_BASE_URL=https://api.arenaticket.gdse.ao/api/v1/public`).
+
+2.  **Instalar Dependências (se necessário):**
+    ```bash
+    npm install
+    ```
+
+3.  **Build para Produção:**
+    ```bash
+    npm run build
+    ```
+    Os arquivos otimizados serão gerados na pasta `dist/`.
+
+4.  **Sincronizar com S3:**
+    ```bash
+    aws s3 sync dist/ s3://arenaticket-gdse-prod-1763422384 --delete
+    ```
+    Isso faz upload dos novos arquivos e remove os antigos.
+
+5.  **Invalidar Cache do CloudFront:**
+    ```bash
+    aws cloudfront create-invalidation --distribution-id ER43YNOBKJ82H --paths "/*"
+    ```
+    Aguarde alguns minutos para que a invalidação seja processada e o site seja atualizado globalmente.
+
+### Endereços e Informações
+
+- **Site Produção:** [www.arenaticket.ao](https://www.arenaticket.ao)
+- **API Base:** `https://api.arenaticket.gdse.ao/api/v1/public`
+- **Bucket S3:** `arenaticket-gdse-prod-1763422384`
+- **CloudFront Distribution ID:** `ER43YNOBKJ82H`
+- **Região AWS:** `us-east-1` (ou conforme configurado no AWS CLI)
+
+### Notas Adicionais
+
+- O deploy é totalmente estático; não há instâncias EC2 ou servidores backend gerenciados aqui.
+- Para deploys automáticos, considere configurar um pipeline CI/CD (ex: GitHub Actions) com as credenciais AWS.
+- Sempre teste localmente (`npm run dev`) antes do deploy para evitar erros em produção.
