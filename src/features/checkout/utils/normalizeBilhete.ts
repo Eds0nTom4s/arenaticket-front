@@ -20,12 +20,31 @@ export function normalizeBilhete(raw: any): Bilhete {
   if (codigoQR && !/^data:image\//.test(codigoQR)) {
     codigoQR = `data:image/png;base64,${codigoQR}`;
   }
+  // Normalizar status do backend para os valores internos: VALID | USED | CANCELLED
+  const rawStatus = (raw.status || raw.estado || raw.situacao || '').toString().toUpperCase();
+  let normalizedStatus: any = 'VALID';
+  if (['VALID', 'ATIVO', 'ACTIVE', 'AVAILABLE'].includes(rawStatus)) {
+    normalizedStatus = 'VALID';
+  } else if (['USED', 'USADO', 'CONSUMED'].includes(rawStatus)) {
+    normalizedStatus = 'USED';
+  } else if (['CANCELLED', 'CANCELADO', 'CANCELED', 'CANCEL'].includes(rawStatus)) {
+    normalizedStatus = 'CANCELLED';
+  } else if (['EXPIRED', 'EXPIRADO'].includes(rawStatus)) {
+    // Tratar expirado como cancelado/indisponível para exibição
+    normalizedStatus = 'CANCELLED';
+  } else if (!rawStatus) {
+    normalizedStatus = 'VALID';
+  } else {
+    // Fallback: tentar aceitar já valores em inglês (VALID/USED/CANCELLED)
+    normalizedStatus = (['VALID', 'USED', 'CANCELLED'].includes(rawStatus) ? rawStatus : 'VALID');
+  }
+
   return {
     id: String(raw.id || raw.bilheteId || raw.ticketId || codigoTicket || Math.random().toString(36).slice(2)),
     codigoTicket,
     codigoTicketCompact,
     codigoQR,
-    status: (raw.status || 'VALID'),
+    status: normalizedStatus,
     compradorNome: raw.compradorNome || raw.nomeComprador || '',
     compradorTelefone: raw.compradorTelefone || raw.telefoneComprador || '',
     evento,

@@ -1,0 +1,283 @@
+================================================================================
+ATUALIZAÇÕES NO BACKEND - TRATAMENTO DE ERROS DE PAGAMENTO
+Instruções para atualização do Frontend
+================================================================================
+
+DATA: 27 de Dezembro de 2025
+OBJETIVO: Melhorar tratamento de erros 400/422 da AppyPay e exibir mensagens amigáveis ao usuário
+
+================================================================================
+1. PROBLEMA IDENTIFICADO
+================================================================================
+
+ANTES DA CORREÇÃO:
+- AppyPay retornava erro 400 (conta suspensa, validação, etc.)
+- Backend retornava HTTP 201 Created com dados inválidos:
+  * status: "PENDING"
+  * paymentId: null
+  * referenciaPagamento: null
+  * mensagem: "Utilize a referência null..."
+- Cliente ficava com pedido "fantasma" sem poder pagar
+
+DEPOIS DA CORREÇÃO:
+- Backend agora retorna HTTP 400/500 com mensagem clara
+- Pedido é marcado como FAILED imediatamente
+- Estoque liberado automaticamente
+- Mensagem limpa extraída do erro da AppyPay
+
+================================================================================
+2. MUDANÇAS NO COMPORTAMENTO DA API
+================================================================================
+
+ENDPOINT: POST /api/v1/public/checkout
+
+CENÁRIOS DE ERRO AGORA RETORNADOS:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CENÁRIO 1: Erro de Validação da AppyPay (400/422)                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│ HTTP Status: 402 Payment Required                                      │
+│                                                                         │
+│ Campos da resposta:                                                    │
+│ - timestamp: Data/hora do erro                                         │
+│ - status: 402                                                          │
+│ - error: "Payment Error"                                               │
+│ - message: Mensagem limpa e legível (sem JSON técnico)                │
+│                                                                         │
+│ Exemplo de mensagem:                                                   │
+│ "As entradas de pagamento estão suspensas até que o processo de       │
+│  verificação da conta esteja concluído."                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CENÁRIO 2: Erro de Rede/Timeout                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ HTTP Status: 402 Payment Required                                      │
+│                                                                         │
+│ Mensagem:                                                              │
+│ "Erro de comunicação com o gateway de pagamento. Tente novamente em   │
+│  alguns minutos."                                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CENÁRIO 3: Referência não gerada (REF)                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ HTTP Status: 402 Payment Required                                      │
+│                                                                         │
+│ Mensagem:                                                              │
+│ "Erro ao gerar referência de pagamento. Tente novamente."             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. EXEMPLOS DE MENSAGENS DE ERRO DA APPYPAY
+================================================================================
+
+Estas são as mensagens que o backend agora extrai e retorna limpas:
+
+1. "As entradas de pagamento estão suspensas até que o processo de 
+    verificação da conta esteja concluído."
+
+2. "Insufficient funds" (Saldo insuficiente)
+
+3. "Invalid payment method" (Método de pagamento inválido)
+
+4. "Transaction limit exceeded" (Limite de transação excedido)
+
+5. "Account not verified" (Conta não verificada)
+
+6. "Service temporarily unavailable" (Serviço temporariamente indisponível)
+
+================================================================================
+4. RECOMENDAÇÕES PARA O FRONTEND
+================================================================================
+
+4.1. TRATAMENTO DE ERRO NO CHECKOUT
+────────────────────────────────────
+
+IMPLEMENTAR:
+
+1. Capturar erros HTTP 402, 400 e 500 da API
+2. Extrair campo "message" da resposta de erro
+3. Exibir mensagem AMIGÁVEL ao usuário na tela
+4. Registrar detalhes técnicos APENAS no console (console.error)
+5. Oferecer opções de ação: "Tentar Novamente" e "Apoio ao Cliente"
+
+IMPORTANTE:
+- NÃO exibir JSON técnico ao usuário
+- NÃO exibir stack traces na interface
+- NÃO exibir códigos HTTP na tela
+- Logs técnicos devem ir apenas para console.error()
+
+4.2. VALIDAÇÃO DE RESPOSTA DE SUCESSO
+──────────────────────────────────────
+
+Mesmo em sucesso (HTTP 201), validar:
+
+1. Para método REFERENCIA:
+   - Verificar se campo "referenciaPagamento" não é null/vazio
+   - Verificar se campo "entidade" não é null/vazio
+   - Se algum for null: exibir erro e registrar no console
+
+2. Para método GPO:
+   - Verificar se campo "paymentId" não é null/vazio
+   - Verificar campo "status"
+
+3. Em caso de dados inválidos:
+   - Exibir: "Erro ao processar pagamento. Tente novamente ou contacte o apoio."
+   - Registrar detalhes técnicos no console.error()
+
+4.3. MENSAGENS PARA O USUÁRIO (UX)
+──────────────────────────────────
+
+PADRÃO DE MENSAGEM AMIGÁVEL:
+
+┌───────────────────────────────────────┐
+│  [ÍCONE DE ERRO]                      │
+│                                       │
+│  Erro ao processar o pagamento        │
+│                                       │
+│  Tente novamente ou contacte          │
+│  o apoio ao cliente.                  │
+│                                       │
+│  [ Tentar Novamente ]                 │
+│                                       │
+│  Apoio ao Cliente                     │
+│  📞 925 813 939                       │
+└───────────────────────────────────────┘
+
+NOTA: Manter mensagem simples e direta, sem detalhes técnicos.
+
+4.4. LOGGING E CONSOLE
+──────────────────────
+
+Registrar no console.error():
+- Timestamp do erro
+- Status HTTP recebido
+- Mensagem completa de erro
+- Dados da requisição (mascarando telefone/email)
+- ID do pedido (se disponível)
+
+NÃO registrar:
+- Senhas ou tokens
+- Dados completos de cartão (não aplicável aqui)
+- Informações pessoais sem mascaramento
+
+================================================================================
+5. FLUXO COMPLETO RECOMENDADO
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. USUÁRIO CLICA EM "FINALIZAR COMPRA"                                 │
+│    ↓                                                                    │
+│ 2. FRONTEND VALIDA DADOS LOCALMENTE                                    │
+│    ↓                                                                    │
+│ 3. FRONTEND ENVIA POST /api/v1/public/checkout                         │
+│    ↓                                                                    │
+│ 4. AGUARDAR RESPOSTA (loading spinner)                                 │
+│    ↓                                                                    │
+│ 5. RESPOSTA RECEBIDA                                                   │
+│    │                                                                    │
+│    ├─ ✅ HTTP 201 Created                                              │
+│    │   ├─ Validar dados da resposta (referencia, paymentId)           │
+│    │   ├─ Se REFERENCIA: Exibir tela com referência e entidade        │
+│    │   └─ Se GPO: Redirecionar ou aguardar confirmação                │
+│    │                                                                    │
+│    └─ ❌ HTTP 402/400/500                                              │
+│        ├─ Extrair mensagem de erro                                     │
+│        ├─ Classificar tipo de erro                                     │
+│        ├─ Exibir mensagem amigável                                     │
+│        ├─ Oferecer ações (tentar novamente, suporte)                  │
+│        └─ Registrar erro (analytics)                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+7. CHECKLIST DE IMPLEMENTAÇÃO
+================================================================================
+
+Frontend:
+[ ] Adicionar tratamento de HTTP 402 no checkout
+[ ] Validar dados da resposta mesmo em sucesso (HTTP 201)
+[ ] Criar componente de erro amigável
+[ ] Implementar classificação de tipos de erro
+[ ] Adicionar botão "Tentar Novamente"
+[ ] Mascarar dados sensíveis nos logs
+[ ] Adicionar analytics para erros de checkout
+[ ] Testar todos os cenários de erro
+[ ] Atualizar documentação do frontend
+
+Backend (JÁ IMPLEMENTADO):
+[✓] Detectar erros 400/422 da AppyPay
+[✓] Extrair mensagem limpa (error_description)
+[✓] Cancelar reserva em caso de erro
+[✓] Marcar pedido como FAILED
+[✓] Validar referência obrigatória para REFERENCIA
+[✓] Retornar HTTP 402 com mensagem limpa
+
+================================================================================
+8. MENSAGENS PARA O USUÁRIO - PADRÃO UX
+================================================================================
+
+REGRA GERAL:
+Todas as mensagens de erro devem seguir o padrão:
+
+"Erro ao processar o pagamento. Tente novamente ou contacte o apoio ao cliente."
+
+DETALHES TÉCNICOS:
+- Devem ser registrados APENAS no console.error()
+- NÃO devem aparecer na interface do usuário
+- Incluir: timestamp, status HTTP, mensagem técnica, dados da requisição
+
+INFORMAÇÕES NA TELA:
+┌───────────────────────────────────────┐
+│  ❌ Erro ao processar o pagamento     │
+│                                       │
+│  Tente novamente ou contacte          │
+│  o apoio ao cliente.                  │
+│                                       │
+│  [ Tentar Novamente ]                 │
+│                                       │
+│  Apoio ao Cliente:                    │
+│  📞 925 813 939                       │
+└───────────────────────────────────────┘
+
+NOTA: Manter mensagem simples, amigável e sem jargão técnico.
+
+================================================================================
+9. INFORMAÇÕES TÉCNICAS ADICIONAIS
+================================================================================
+
+Arquivos Backend Modificados:
+- AppyPayProvider.java
+  └─ Método adicionado: extrairMensagemErro(String errorBody)
+  └─ Modificado: onStatus error handler (linha 122-133)
+
+- PedidoService.java
+  └─ Modificado: bloco catch (linha 257-332)
+  └─ Lógica simplificada: apenas repassa mensagem limpa
+
+Commit:
+- Hash: b00f948
+- Mensagem: "feat: melhorar extração de mensagens de erro da AppyPay - 
+            exibir error_description limpo ao usuário"
+
+Status HTTP Retornados:
+- 201: Sucesso (pedido criado)
+- 400: Erro de validação (dados inválidos)
+- 402: Erro de pagamento (Payment Required)
+- 500: Erro interno do servidor
+
+================================================================================
+10. SUPORTE E CONTATO
+================================================================================
+
+Em caso de dúvidas sobre a implementação:
+- Verificar logs da API em produção
+- Consultar Swagger: https://api.arenaticket.ao/swagger-ui.html
+- Testar endpoint: POST /api/v1/public/checkout
+
+Telefone de suporte ao cliente:
+- +244 925 813 939
+
+================================================================================
+FIM DO DOCUMENTO
+================================================================================

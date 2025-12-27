@@ -13,6 +13,10 @@
         </div>
         <h2>Bilhete não encontrado</h2>
         <p>{{ error }}</p>
+        <p class="bp-error-hint">
+          ℹ️ <strong>Dica:</strong> Verifique se o código do bilhete está correto na URL.<br>
+          Formato esperado: <code>/bilhete/GDSE-XXXX-XXXX</code>
+        </p>
         <AtButton variant="primary" @click="voltarHome">
           Voltar à página inicial
         </AtButton>
@@ -24,6 +28,9 @@
         <div class="thermal-ticket">
           <!-- Logo/Título -->
           <div class="tt-header">
+            <div class="tt-badge-container">
+              <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
+            </div>
             <router-link to="/" class="tt-brand-link">
               <h1 class="tt-brand">ARENATICKET</h1>
             </router-link>
@@ -238,23 +245,33 @@ const formatCodigoBilhete = (codigo: string): string => {
 };
 
 const getStatusLabel = (status: string): string => {
-  const labels: Record<string, string> = {
+  const s = (status || '').toString().toUpperCase();
+  const map: Record<string, string> = {
+    'VALID': 'Ativo',
+    'USED': 'Usado',
+    'CANCELLED': 'Cancelado',
+    'EXPIRED': 'Expirado',
     'ATIVO': 'Ativo',
     'USADO': 'Usado',
     'CANCELADO': 'Cancelado',
     'EXPIRADO': 'Expirado'
   };
-  return labels[status] || status;
+  return map[s] || status || '';
 };
 
 const getBadgeVariant = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
-  const variants: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  const s = (status || '').toString().toUpperCase();
+  const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+    'VALID': 'success',
+    'USED': 'info',
+    'CANCELLED': 'danger',
+    'EXPIRED': 'warning',
     'ATIVO': 'success',
     'USADO': 'info',
     'CANCELADO': 'danger',
     'EXPIRADO': 'warning'
   };
-  return variants[status] || 'info';
+  return map[s] || 'info';
 };
 
 // Copiar código
@@ -357,6 +374,50 @@ const generateTicketCanvas = (b: Bilhete, callback: (canvas: HTMLCanvasElement) 
   ctx.textAlign = 'center';
   ctx.font = 'bold 42px Arial';
   ctx.fillText('ARENATICKET', canvas.width / 2, 60);
+  // Desenhar badge de status no topo direito
+  const drawStatusBadge = (statusVal: string) => {
+    const label = getStatusLabel(statusVal) || '';
+    const variant = getBadgeVariant(statusVal);
+    const colorMap: Record<string, string> = {
+      success: '#16a34a',
+      warning: '#f59e0b',
+      danger: '#dc2626',
+      info: '#3b82f6'
+    };
+    const color = colorMap[variant] || '#999999';
+
+    ctx.save();
+    ctx.font = 'bold 12px Arial';
+    const padX = 12;
+    const padY = 8;
+    const textWidth = ctx.measureText(label).width;
+    const badgeW = textWidth + padX * 2;
+    const badgeH = 24;
+    const x = canvas.width - 40 - badgeW;
+    const y = 28;
+
+    // rounded rect
+    const r = 6;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + badgeW - r, y);
+    ctx.quadraticCurveTo(x + badgeW, y, x + badgeW, y + r);
+    ctx.lineTo(x + badgeW, y + badgeH - r);
+    ctx.quadraticCurveTo(x + badgeW, y + badgeH, x + badgeW - r, y + badgeH);
+    ctx.lineTo(x + r, y + badgeH);
+    ctx.quadraticCurveTo(x, y + badgeH, x, y + badgeH - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + badgeW / 2, y + badgeH / 2 + 5);
+    ctx.restore();
+  };
+  drawStatusBadge(b.status);
   
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 2;
@@ -581,6 +642,27 @@ onMounted(() => {
   font-size: 4rem;
 }
 
+.bp-error-hint {
+  margin-top: var(--spacing-4, 1.5rem);
+  padding: var(--spacing-3, 1rem);
+  background: #f9fafb;
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.bp-error-hint code {
+  background: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
 /* Layout de impressora térmica */
 .thermal-ticket {
   max-width: 400px;
@@ -694,6 +776,12 @@ onMounted(() => {
 .tt-qr-instruction {
   font-size: 11px;
   text-align: center;
+}
+
+.tt-badge-container {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 .tt-code-section {

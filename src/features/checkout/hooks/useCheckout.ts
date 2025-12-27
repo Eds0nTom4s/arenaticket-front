@@ -13,6 +13,15 @@ import { normalizeBilhetes } from '../utils/normalizeBilhete';
 import { getFriendlyErrorMessage } from '../utils/validators';
 import { getPedidoBilhetes } from '../services/paymentService';
 
+/**
+ * Mascara telefone para logging (exibe apenas primeiros 3 dígitos)
+ * Exemplo: 923456789 -> 923******
+ */
+function maskTelefone(telefone: string): string {
+  if (!telefone || telefone.length < 3) return '***';
+  return telefone.slice(0, 3) + '******';
+}
+
 export function useCheckout() {
   const isCreating = ref(false);
   const error = ref<string | null>(null);
@@ -90,7 +99,23 @@ export function useCheckout() {
       const friendlyMessage = getFriendlyErrorMessage(err);
       error.value = friendlyMessage;
       
-      console.error('[useCheckout] Erro ao criar pedido:', err);
+      // 📄 Log técnico detalhado (apenas console - nunca exibir ao usuário)
+      console.error('[useCheckout] Erro ao criar pedido:', {
+        timestamp: new Date().toISOString(),
+        httpStatus: err.response?.status,
+        backendMessage: err.response?.data?.message,
+        friendlyMessage: friendlyMessage,
+        isRetryable: err.isRetryable ?? false,
+        requestData: {
+          loteId: data.loteId,
+          quantidade: data.quantidade,
+          compradorNome: data.compradorNome,
+          compradorTelefone: maskTelefone(data.compradorTelefone), // Mascarar telefone
+          compradorEmail: data.compradorEmail ? '***@***' : null,    // Mascarar email
+          metodoPagamento: data.metodoPagamento,
+        },
+        idempotencyKey,
+      });
       
       // Re-throw com informação se é retryable
       err.isRetryable = err.isRetryable ?? false;

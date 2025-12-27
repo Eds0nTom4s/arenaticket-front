@@ -83,12 +83,13 @@
             @close="handleClose"
           />
 
-          <!-- Falha imediata (GPO) -->
+          <!-- Falha imediata (GPO ou erro de pagamento) -->
           <PaymentFailed
             v-else-if="checkoutResult.status === 'FAILED'"
             :mensagem="(checkoutResult as any).mensagem"
             :referencia="(checkoutResult as any).referencia"
             :loading="checkoutLoading"
+            :show-switch-option="buyerInfo.metodo === 'GPO'"
             @retry="retryCheckout"
             @switch="switchToReferencia"
           />

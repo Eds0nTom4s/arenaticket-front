@@ -156,44 +156,64 @@ export function isLoteDisponivel(lote: {
 
 /**
  * Retorna mensagem de erro amigável para o usuário
+ * Conforme documento ATUALIZACOES_TRATAMENTO_ERROS_FRONTEND.txt
+ * 
+ * REGRA: Mensagens técnicas ficam apenas no console.error()
+ * Usuário vê mensagem limpa e amigável
  */
 export function getFriendlyErrorMessage(error: any): string {
-  // Erros de validação do backend
-  if (error.response?.data?.message) {
-    return error.response.data.message;
-  }
+  const status = error.response?.status;
+  const backendMessage = error.response?.data?.message || error.message || '';
   
-  // Erros HTTP conhecidos
-    const status = error.response?.status;  
-    const rawMessage = error.response?.data?.message || '';
-    const rawLower = (rawMessage || '').toLowerCase();
-    // Detecção específica de falha de autenticação AppyPay para mensagem orientativa
-    const isAppyPayAuthIssue =
-      rawLower.includes('autenticação appypay') ||
-      (rawLower.includes('appypay') && rawLower.includes('autentica'));
-
-    if (isAppyPayAuthIssue) {
-      return 'Falha na autenticação com o provedor de pagamento. Escolha Referência ATM ou tente novamente mais tarde.';
+  // 🔴 HTTP 402 Payment Required - Novo comportamento do backend
+  // Backend já retorna mensagem limpa e legível da AppyPay
+  if (status === 402) {
+    // Se backend enviou mensagem limpa, usar diretamente
+    if (backendMessage && backendMessage.length > 0) {
+      return backendMessage;
     }
-  
-  switch (status) {
-    case 400:
-      return 'Dados inválidos. Por favor, verifique as informações fornecidas.';
-    case 409:
-      return 'Bilhetes não disponíveis. Por favor, escolha outro lote ou quantidade.';
-    case 500:
-      return 'Erro no servidor. Por favor, tente novamente em alguns instantes.';
-    case 503:
-      return 'Serviço temporariamente indisponível. Por favor, tente novamente.';
-    default:
-      break;
+    // Fallback genérico
+    return 'Erro ao processar o pagamento. Tente novamente ou contacte o apoio ao cliente.';
   }
   
-  // Erros de rede
+  // 🔴 HTTP 400 Bad Request - Dados inválidos
+  if (status === 400) {
+    // Usar mensagem do backend se disponível
+    if (backendMessage && backendMessage.length > 0) {
+      return backendMessage;
+    }
+    return 'Dados inválidos. Por favor, verifique as informações fornecidas.';
+  }
+  
+  // 🔴 HTTP 409 Conflict - Bilhetes não disponíveis
+  if (status === 409) {
+    return 'Bilhetes não disponíveis. Por favor, escolha outro lote ou quantidade.';
+  }
+  
+  // 🔴 HTTP 500 Internal Server Error
+  if (status === 500) {
+    // Usar mensagem do backend se disponível
+    if (backendMessage && backendMessage.length > 0) {
+      return backendMessage;
+    }
+    return 'Erro no servidor. Por favor, tente novamente em alguns instantes.';
+  }
+  
+  // 🔴 HTTP 503 Service Unavailable
+  if (status === 503) {
+    return 'Serviço temporariamente indisponível. Por favor, tente novamente.';
+  }
+  
+  // 🔴 Erros de rede (sem resposta do servidor)
   if (!error.response) {
     return 'Erro de conexão. Verifique sua internet e tente novamente.';
   }
   
-  // Erro genérico
-  return 'Ocorreu um erro inesperado. Por favor, tente novamente.';
+  // 🔴 Fallback: usar mensagem do backend ou genérica
+  if (backendMessage && backendMessage.length > 0) {
+    return backendMessage;
+  }
+  
+  // Mensagem genérica final
+  return 'Erro ao processar o pagamento. Tente novamente ou contacte o apoio ao cliente.';
 }

@@ -18,7 +18,7 @@
           <!-- Bilhete estilo térmico -->
           <div class="thermal-ticket">
             <div class="tt-badge-container">
-              <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
+              <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
             </div>
 
             <div class="tt-header">
@@ -120,9 +120,9 @@
         :key="bilhete.id"
       >
         <!-- Bilhete estilo térmico -->
-        <div class="thermal-ticket">
+          <div class="thermal-ticket">
           <div class="tt-badge-container">
-            <AtBadge variant="success">Bilhete #{{ index + 1 }}</AtBadge>
+            <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
           </div>
 
           <div class="tt-header">
@@ -302,6 +302,37 @@ const displayLocal = (b: Bilhete) => b.evento?.local || (b.evento?.id && eventDe
 const rawEventDate = (b: Bilhete) => b.evento?.dataEvento || (b.evento?.id && eventDetails[b.evento.id]?.dataEvento) || '';
 const displayData = (b: Bilhete) => formatDataEvento(rawEventDate(b));
 
+// Status helpers (used by template and canvas)
+const getStatusLabel = (status: string): string => {
+  const s = (status || '').toString().toUpperCase();
+  const map: Record<string, string> = {
+    'VALID': 'Ativo',
+    'USED': 'Usado',
+    'CANCELLED': 'Cancelado',
+    'EXPIRED': 'Expirado',
+    'ATIVO': 'Ativo',
+    'USADO': 'Usado',
+    'CANCELADO': 'Cancelado',
+    'EXPIRADO': 'Expirado'
+  };
+  return map[s] || status || '';
+};
+
+const getBadgeVariant = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
+  const s = (status || '').toString().toUpperCase();
+  const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+    'VALID': 'success',
+    'USED': 'info',
+    'CANCELLED': 'danger',
+    'EXPIRED': 'warning',
+    'ATIVO': 'success',
+    'USADO': 'info',
+    'CANCELADO': 'danger',
+    'EXPIRADO': 'warning'
+  };
+  return map[s] || 'info';
+};
+
 // Controle do carrossel inline
 const currentIndex = ref(0);
 const next = () => {
@@ -346,6 +377,49 @@ const downloadTicket = (bilhete: Bilhete) => {
   ctx.textAlign = 'center';
   ctx.font = 'bold 42px Arial';
   ctx.fillText('ARENATICKET', canvas.width / 2, 60);
+  // Draw status badge top-right
+  const drawStatusBadge = (statusVal: string) => {
+    const label = getStatusLabel(statusVal) || '';
+    const variant = getBadgeVariant(statusVal);
+    const colorMap: Record<string, string> = {
+      success: '#16a34a',
+      warning: '#f59e0b',
+      danger: '#dc2626',
+      info: '#3b82f6'
+    };
+    const color = colorMap[variant] || '#999999';
+
+    ctx.save();
+    ctx.font = 'bold 12px Arial';
+    const padX = 12;
+    const padY = 8;
+    const textWidth = ctx.measureText(label).width;
+    const badgeW = textWidth + padX * 2;
+    const badgeH = 24;
+    const x = canvas.width - 40 - badgeW;
+    const y = 28;
+
+    const r = 6;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + badgeW - r, y);
+    ctx.quadraticCurveTo(x + badgeW, y, x + badgeW, y + r);
+    ctx.lineTo(x + badgeW, y + badgeH - r);
+    ctx.quadraticCurveTo(x + badgeW, y + badgeH, x + badgeW - r, y + badgeH);
+    ctx.lineTo(x + r, y + badgeH);
+    ctx.quadraticCurveTo(x, y + badgeH, x, y + badgeH - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + badgeW / 2, y + badgeH / 2 + 5);
+    ctx.restore();
+  };
+  drawStatusBadge(bilhete.status);
   
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 2;

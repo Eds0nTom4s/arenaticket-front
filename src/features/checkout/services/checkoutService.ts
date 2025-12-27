@@ -35,33 +35,47 @@ export async function createCheckout(
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const error: any = new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+        
+        // Extrair mensagem limpa do backend
+        const cleanMessage = errorData.message || `Erro HTTP ${response.status}`;
+        
+        const error: any = new Error(cleanMessage);
         error.response = {
           status: response.status,
           data: errorData,
         };
+        
         // Classificar erro retryable inicialmente
         error.isRetryable = isRetryableError(error);
 
-        // Não devemos fazer retry em falhas de autenticação do provedor de pagamento
-        const msgLower = (errorData.message || '').toLowerCase();
+        // ❌ NUNCA fazer retry em erros de pagamento (402, 400, 401, 403)
+        // Backend já cancelou a reserva e marcou pedido como FAILED
         if (
-          msgLower.includes('autenticação appypay') ||
-          msgLower.includes('appypay') && msgLower.includes('autentica') ||
-          error.response.status === 401 ||
-          error.response.status === 403
+          error.response.status === 402 || // Payment Required (novo comportamento)
+          error.response.status === 400 || // Bad Request
+          error.response.status === 401 || // Unauthorized
+          error.response.status === 403    // Forbidden
         ) {
           error.isRetryable = false;
         }
         
-        console.error('[CheckoutService] Erro na requisição:', error);
+        // Log técnico detalhado (apenas no console)
+        console.error('[CheckoutService] Erro na requisição:', {
+          timestamp: new Date().toISOString(),
+          status: response.status,
+          message: cleanMessage,
+          data: errorData,
+          idempotencyKey,
+        });
+        
         throw error;
       }
 
       const result = await response.json();
       console.log('[CheckoutService] Pedido criado com sucesso:', result);
+      
+      // ✅ Validar dados da resposta mesmo em sucesso (HTTP 201)
+      validateSuccessResponse(result, data.metodoPagamento);
       
       // Backend v1.2.0 retorna dados diretos (não em wrapper)
       return result as PedidoBackendResponse;
@@ -77,6 +91,32 @@ export async function createCheckout(
       },
     }
   );
+}
+
+/**
+ * Valida resposta de sucesso do backend
+ * Conforme documento: verificar campos obrigatórios não sejam null
+ */
+function validateSuccessResponse(result: any, metodoPagamento: string): void {
+  // Para método REFERENCIA: validar referência e entidade
+  if (metodoPagamento === 'REFERENCIA') {
+    if (!result.referencia || result.referencia === null) {
+      console.error('[CheckoutService] Erro: referencia é null na resposta', result);
+      throw new Error('Erro ao gerar referência de pagamento. Tente novamente.');
+    }
+    if (!result.entidade || result.entidade === null) {
+      console.error('[CheckoutService] Erro: entidade é null na resposta', result);
+      throw new Error('Erro ao gerar entidade de pagamento. Tente novamente.');
+    }
+  }
+  
+  // Para método GPO: validar paymentId
+  if (metodoPagamento === 'GPO') {
+    if (!result.paymentId || result.paymentId === null) {
+      console.error('[CheckoutService] Erro: paymentId é null na resposta', result);
+      throw new Error('Erro ao processar pagamento GPO. Tente novamente.');
+    }
+  }
 }
 
 /**

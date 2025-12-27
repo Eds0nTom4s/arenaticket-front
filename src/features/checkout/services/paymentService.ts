@@ -96,10 +96,19 @@ export async function getPedidoBilhetes(pedidoId: string): Promise<Bilhete[]> {
  */
 export async function getBilheteByCodigo(codigo: string): Promise<Bilhete> {
   console.log('[PaymentService] Buscando bilhete por código:', codigo);
+  console.log('[PaymentService] URL da API:', `${API_BASE_URL}/bilhete/${codigo}`);
 
-  const response = await fetch(`${API_BASE_URL}/bilhetes/${codigo}`);
+  const response = await fetch(`${API_BASE_URL}/bilhete/${codigo}`);
 
   if (!response.ok) {
+    console.error('[PaymentService] Resposta da API:', response.status, response.statusText);
+    
+    if (response.status === 404) {
+      const error = new Error(`Bilhete com código "${codigo}" não encontrado na base de dados`);
+      console.error('[PaymentService] Erro 404:', error);
+      throw error;
+    }
+    
     const error = new Error(`HTTP error! status: ${response.status}`);
     console.error('[PaymentService] Erro ao buscar bilhete:', error);
     throw error;
