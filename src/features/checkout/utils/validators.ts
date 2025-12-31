@@ -57,29 +57,30 @@ export function formatTelefone(telefone: string): string {
 
 /**
  * Formata código de bilhete para exibição
- * Entrada: GDSE12345678
- * Saída: GDSE-1234 5678
+ * Entrada: GDSE-12345678 ou GDSE12345678
+ * Saída: GDSE - 1234 5678
  */
 export function formatCodigoBilhete(codigo: string): string {
-  // Se já está formatado, retornar como está
-  if (codigo.includes('-') && codigo.includes(' ')) {
-    return codigo;
+  if (!codigo) return '';
+  
+  // Separar prefixo (GDSE) e número
+  const match = codigo.match(/^([A-Z]+)-?(.+)$/);
+  if (!match) return codigo;
+  
+  const prefixo = match[1]; // GDSE
+  const numero = match[2].replace(/\D/g, ''); // Remove não-dígitos
+  
+  if (numero.length < 4) {
+    return `${prefixo} - ${numero}`;
   }
   
-  // Remover espaços e traços existentes
-  const cleaned = codigo.replace(/[\s\-]/g, '');
-  
-  // Formato: GDSE-12345678 ou GDSE-1234 5678
-  if (cleaned.length >= 12) {
-    const prefix = cleaned.slice(0, 4); // GDSE
-    const numbers = cleaned.slice(4); // 12345678
-    
-    if (numbers.length === 8) {
-      return `${prefix}-${numbers.slice(0, 4)} ${numbers.slice(4)}`;
-    }
+  // Dividir número em grupos de 4
+  const grupos: string[] = [];
+  for (let i = 0; i < numero.length; i += 4) {
+    grupos.push(numero.slice(i, i + 4));
   }
   
-  return codigo;
+  return `${prefixo} - ${grupos.join(' ')}`;
 }
 
 /**

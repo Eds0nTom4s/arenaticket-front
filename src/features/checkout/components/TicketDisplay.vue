@@ -1,13 +1,5 @@
 <template>
   <div class="ticket-display">
-    <div class="td-header">
-      <div class="td-success-icon">
-        <AtIcon><span>✔️</span></AtIcon>
-      </div>
-      <h2>✅ Pagamento Confirmado!</h2>
-      <p>Seus bilhetes foram gerados com sucesso</p>
-    </div>
-
     <div v-if="bilhetes.length > 1" class="td-carousel">
       <div class="td-carousel-track" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
         <div
@@ -17,11 +9,10 @@
         >
           <!-- Bilhete estilo térmico -->
           <div class="thermal-ticket">
-            <div class="tt-badge-container">
-              <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
-            </div>
-
             <div class="tt-header">
+              <div class="tt-badge-container">
+                <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
+              </div>
               <router-link to="/" class="tt-brand-link">
                 <h1 class="tt-brand">ARENATICKET</h1>
               </router-link>
@@ -66,14 +57,6 @@
 
             <div class="tt-code-section">
               <div class="tt-code">{{ formatCodigoBilhete(bilhete.codigoTicket) }}</div>
-              <button
-                type="button"
-                class="tt-copy-btn"
-                @click="copyCode(bilhete.codigoTicket)"
-                :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
-              >
-                {{ copiedCodes[bilhete.id] ? '✔️ Copiado' : '📋 Copiar' }}
-              </button>
             </div>
 
             <div class="tt-divider-dashed"></div>
@@ -82,28 +65,9 @@
               <div class="tt-footer-line">Documento válido apenas com QR Code</div>
               <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
               <div class="tt-footer-info">
-                Gerado via ArenaTicket • +244 925 813 939<br>
-                www.arenaticket.ao
+                <div>Gerado via ArenaTicket • +244 925 813 939</div>
+                <div>www.arenaticket.ao</div>
               </div>
-            </div>
-
-            <div class="tt-actions">
-              <AtButton
-                variant="secondary"
-                size="sm"
-                @click="downloadTicket(bilhete)"
-              >
-                <AtIcon><span>⬇️</span></AtIcon>
-                Baixar
-              </AtButton>
-              <AtButton
-                variant="primary"
-                size="sm"
-                @click="shareWhatsApp(bilhete)"
-              >
-                <AtIcon><span>📤</span></AtIcon>
-                WhatsApp
-              </AtButton>
             </div>
           </div>
         </div>
@@ -121,11 +85,10 @@
       >
         <!-- Bilhete estilo térmico -->
           <div class="thermal-ticket">
-          <div class="tt-badge-container">
-            <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
-          </div>
-
           <div class="tt-header">
+            <div class="tt-badge-container">
+              <AtBadge :variant="getBadgeVariant(bilhete.status)">{{ getStatusLabel(bilhete.status) }}</AtBadge>
+            </div>
             <router-link to="/" class="tt-brand-link">
               <h1 class="tt-brand">ARENATICKET</h1>
             </router-link>
@@ -170,14 +133,6 @@
 
           <div class="tt-code-section">
             <div class="tt-code">{{ formatCodigoBilhete(bilhete.codigoTicket) }}</div>
-            <button
-              type="button"
-              class="tt-copy-btn"
-              @click="copyCode(bilhete.codigoTicket)"
-              :title="copiedCodes[bilhete.id] ? 'Copiado!' : 'Copiar'"
-            >
-              {{ copiedCodes[bilhete.id] ? '✔️ Copiado' : '📋 Copiar' }}
-            </button>
           </div>
 
           <div class="tt-divider-dashed"></div>
@@ -186,67 +141,40 @@
             <div class="tt-footer-line">Documento válido apenas com QR Code</div>
             <div class="tt-footer-line">Não transferível | Sujeito a verificação</div>
             <div class="tt-footer-info">
-              Gerado via ArenaTicket • +244 925 813 939<br>
-              www.arenaticket.ao
+              <div>Gerado via ArenaTicket • +244 925 813 939</div>
+              <div>www.arenaticket.ao</div>
             </div>
           </div>
-
-          <div class="tt-actions">
-            <AtButton
-              variant="secondary"
-              size="sm"
-              @click="downloadTicket(bilhete)"
-            >
-              <AtIcon><span>⬇️</span></AtIcon>
-              Baixar
-            </AtButton>
-            <AtButton
-              variant="primary"
-              size="sm"
-              @click="shareWhatsApp(bilhete)"
-            >
-              <AtIcon><span>📤</span></AtIcon>
-              WhatsApp
-            </AtButton>
-          </div>
         </div>
       </div>
     </div>
 
-    <div class="td-sms-confirmation">
-  <AtIcon><span>💬</span></AtIcon>
-      <p>
-        📱 Os códigos dos bilhetes também foram enviados via SMS para o número registrado.
-        Mostre os códigos ou QR codes na entrada do evento.
-      </p>
-    </div>
-
-    <div class="td-footer">
-      <div class="td-important">
-  <AtIcon><span>ℹ️</span></AtIcon>
-        <div>
-          <h4>Informações Importantes:</h4>
-          <ul>
-            <li>Guarde bem os códigos dos seus bilhetes</li>
-            <li>Apresente o QR code ou código na entrada do evento</li>
-            <li>Cada bilhete é válido para uma única pessoa</li>
-            <li>Chegue com antecedência para evitar filas</li>
-          </ul>
-        </div>
+    <!-- Ações (Unificadas fora do bilhete para coincidir com BilhetePage) -->
+    <div class="td-actions-container">
+      <div class="bp-actions">
+        <AtButton
+          variant="secondary"
+          size="lg"
+          @click="downloadTicket(bilhetes[currentIndex])"
+        >
+          <AtIcon><span>⬇️</span></AtIcon>
+          Baixar Bilhete
+        </AtButton>
+        <AtButton
+          variant="primary"
+          size="lg"
+          @click="shareWhatsApp(bilhetes[currentIndex])"
+        >
+          <AtIcon><span>📤</span></AtIcon>
+          Compartilhar
+        </AtButton>
       </div>
 
-      <div class="td-support">
-        <p>
-          Precisa de ajuda? Entre em contato: <strong>925 813 939</strong>
-        </p>
-        <p class="td-thank-you">
-          Obrigado por apoiar o <strong>Grupo Desportivo Sagrada Esperança</strong>!
-        </p>
+      <div class="bp-footer">
+        <AtButton variant="ghost" @click="$emit('close')">
+          ← Voltar à página inicial
+        </AtButton>
       </div>
-
-      <AtButton variant="primary" @click="$emit('close')" fullWidth>
-        Fechar
-      </AtButton>
     </div>
   </div>
 </template>
@@ -636,40 +564,6 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   margin: 0 auto;
 }
 
-.td-header {
-  text-align: center;
-  margin-bottom: var(--spacing-6, 2rem);
-  padding-bottom: var(--spacing-4, 1.5rem);
-  border-bottom: 2px solid var(--color-border, #e5e5e5);
-}
-
-.td-success-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto var(--spacing-3, 1rem);
-  color: var(--color-success, #16a34a);
-}
-
-.td-header h2 {
-  font-size: var(--font-size-2xl, 2rem);
-  font-weight: 700;
-  margin: 0 0 var(--spacing-2, 0.5rem) 0;
-  color: var(--color-text-primary, #1a1a1a);
-}
-
-.td-header p {
-  font-size: var(--font-size-base, 1rem);
-  color: var(--color-text-secondary, #666);
-  margin: 0;
-}
-
-.td-tickets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: var(--spacing-6, 2rem);
-  margin-bottom: var(--spacing-6, 2rem);
-}
-
 .td-carousel {
   position: relative;
   width: 100%;
@@ -723,9 +617,16 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   background: rgba(0,0,0,0.7);
 }
 
+.td-tickets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6, 2rem);
+  margin-bottom: var(--spacing-6, 2rem);
+}
+
 /* Modelo térmico */
 .thermal-ticket {
-  max-width: 450px;
+  max-width: 400px;
   margin: 0 auto;
   background: white;
   padding: 24px 20px;
@@ -737,8 +638,8 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 
 .tt-badge-container {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
 }
 
 .tt-header {
@@ -756,10 +657,6 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 
 .tt-brand-link:hover {
   opacity: 0.7;
-}
-
-.tt-brand-link:active {
-  opacity: 0.5;
 }
 
 .tt-brand {
@@ -848,10 +745,6 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 .tt-code-section {
   text-align: center;
   margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
 }
 
 .tt-code {
@@ -859,21 +752,6 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   font-weight: bold;
   letter-spacing: 2px;
   font-family: 'Courier New', Courier, monospace;
-}
-
-.tt-copy-btn {
-  padding: 8px 16px;
-  background: white;
-  border: 1px solid #000;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-  transition: all 0.2s;
-}
-
-.tt-copy-btn:hover {
-  background: #f0f0f0;
 }
 
 .tt-footer {
@@ -894,92 +772,25 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   color: #666;
 }
 
-.tt-actions {
-  display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  justify-content: center;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e5e5;
-}
-
-.td-sms-confirmation {
-  display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  padding: var(--spacing-4, 1.5rem);
-  background: var(--color-success-light, #dcfce7);
-  border-radius: var(--radius-md, 8px);
-  border-left: 3px solid var(--color-success, #16a34a);
-  margin-bottom: var(--spacing-4, 1.5rem);
-}
-
-.td-sms-confirmation p {
-  margin: 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-primary, #1a1a1a);
-  line-height: 1.5;
-}
-
-.td-footer {
-  margin-top: var(--spacing-6, 2rem);
-}
-
-.td-important {
+.bp-actions {
   display: flex;
   gap: var(--spacing-3, 1rem);
-  padding: var(--spacing-4, 1.5rem);
-  background: var(--color-info-light, #dbeafe);
-  border-radius: var(--radius-md, 8px);
-  border-left: 3px solid var(--color-info, #3b82f6);
-  margin-bottom: var(--spacing-4, 1.5rem);
+  margin: var(--spacing-6, 2rem) auto;
+  max-width: 400px;
 }
 
-.td-important h4 {
-  font-size: var(--font-size-base, 1rem);
-  font-weight: 600;
-  margin: 0 0 var(--spacing-2, 0.5rem) 0;
-  color: var(--color-text-primary, #1a1a1a);
+.bp-actions button {
+  flex: 1;
 }
 
-.td-important ul {
-  margin: 0;
-  padding-left: var(--spacing-4, 1.5rem);
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-}
-
-.td-important li {
-  margin-bottom: var(--spacing-1, 0.25rem);
-}
-
-.td-support {
+.bp-footer {
   text-align: center;
-  margin-bottom: var(--spacing-4, 1.5rem);
-}
-
-.td-support p {
-  margin: 0 0 var(--spacing-2, 0.5rem) 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-secondary, #666);
-}
-
-.td-thank-you {
-  font-size: var(--font-size-base, 1rem);
-  color: var(--color-primary, #1e40af);
-  font-weight: 500;
+  margin-top: var(--spacing-6, 2rem);
 }
 
 @media (max-width: 768px) {
   .ticket-display {
     padding: var(--spacing-3, 1rem);
-  }
-
-  .td-tickets-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .td-header h2 {
-    font-size: var(--font-size-xl, 1.5rem);
   }
 
   .thermal-ticket {
@@ -1000,9 +811,8 @@ const shareWhatsApp = (bilhete: Bilhete) => {
     height: 180px;
   }
 
-  .tt-qr-placeholder {
-    width: 180px;
-    height: 180px;
+  .bp-actions {
+    flex-direction: column;
   }
 }
 </style>
