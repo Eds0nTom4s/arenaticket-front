@@ -61,9 +61,9 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
   const startPolling = async (
     identity:
       | string
-      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string }
+      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string; referenciaPagamento?: string }
   ): Promise<void> => {
-    const hasAnyId = typeof identity === 'string' ? !!identity : !!(identity.pedidoId || identity.clientRequestId || identity.reservaId || identity.referencia);
+    const hasAnyId = typeof identity === 'string' ? !!identity : !!(identity.pedidoId || identity.clientRequestId || identity.reservaId || identity.referencia || identity.referenciaPagamento);
     if (!hasAnyId) {
       console.error('[PaymentStatus] Identificador do pagamento não fornecido');
       return;
@@ -107,7 +107,7 @@ export function usePaymentStatus(options: UsePaymentStatusOptions = {}) {
   const checkStatus = async (
     identity:
       | string
-      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string }
+      | { pedidoId?: string; clientRequestId?: string; reservaId?: string; referencia?: string; referenciaPagamento?: string }
   ): Promise<void> => {
     try {
       // Verificar se já passou do timeout

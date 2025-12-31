@@ -22,6 +22,7 @@ export async function getPaymentStatus(
         clientRequestId?: string;
         reservaId?: string;
         referencia?: string;
+        referenciaPagamento?: string;
       }
 ): Promise<PaymentStatusResponse> {
   const ident = typeof identity === 'string' ? { pedidoId: identity } : identity;
@@ -32,6 +33,7 @@ export async function getPaymentStatus(
     candidates.push(`${API_BASE_URL}/pagamentos/cliente/${encodeURIComponent(ident.clientRequestId)}/status`);
   if (ident.reservaId) candidates.push(`${API_BASE_URL}/pagamentos/reservas/${ident.reservaId}/status`);
   if (ident.referencia) candidates.push(`${API_BASE_URL}/pagamentos/referencias/${ident.referencia}/status`);
+  if (ident.referenciaPagamento) candidates.push(`${API_BASE_URL}/pagamentos/referencias/${ident.referenciaPagamento}/status`);
 
   console.log('[PaymentService] Consultando status. Candidatos:', candidates);
 

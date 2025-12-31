@@ -98,22 +98,32 @@ export async function createCheckout(
  * Conforme documento: verificar campos obrigatórios não sejam null
  */
 function validateSuccessResponse(result: any, metodoPagamento: string): void {
-  // Para método REFERENCIA: validar referência e entidade
+  // Se o pedido foi criado e está PENDING, permitimos o fluxo mesmo que a referência 
+  // venha em campos alternativos (mapeamento feito no helper/componente)
+  if (result.id && result.status === 'PENDING') {
+    return;
+  }
+
+  // Para método REFERENCIA: validar se temos ao menos uma forma de identificar o pagamento
   if (metodoPagamento === 'REFERENCIA') {
-    if (!result.referencia || result.referencia === null) {
-      console.error('[CheckoutService] Erro: referencia é null na resposta', result);
+    const hasRef = result.referencia || result.referenciaPagamento || result.paymentId;
+    if (!hasRef) {
+      console.error('[CheckoutService] Erro: nenhuma referência encontrada na resposta', result);
       throw new Error('Erro ao gerar referência de pagamento. Tente novamente.');
     }
-    if (!result.entidade || result.entidade === null) {
-      console.error('[CheckoutService] Erro: entidade é null na resposta', result);
-      throw new Error('Erro ao gerar entidade de pagamento. Tente novamente.');
+    if (!result.entidade && !result.paymentProvider) {
+      console.error('[CheckoutService] Erro: entidade ausente na resposta', result);
+      // Não bloqueia se tivermos o ID do pedido, conforme comunicado técnico
+      if (!result.id) {
+        throw new Error('Erro ao gerar entidade de pagamento. Tente novamente.');
+      }
     }
   }
   
   // Para método GPO: validar paymentId
   if (metodoPagamento === 'GPO') {
-    if (!result.paymentId || result.paymentId === null) {
-      console.error('[CheckoutService] Erro: paymentId é null na resposta', result);
+    if (!result.paymentId && !result.id) {
+      console.error('[CheckoutService] Erro: paymentId/id ausente na resposta', result);
       throw new Error('Erro ao processar pagamento GPO. Tente novamente.');
     }
   }

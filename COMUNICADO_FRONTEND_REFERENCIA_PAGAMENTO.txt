@@ -1,0 +1,74 @@
+================================================================================
+COMUNICADO TÉCNICO: AJUSTE NO FLUXO DE REFERÊNCIA DE PAGAMENTO
+Para: Equipe de Desenvolvimento Frontend (ArenaTicket)
+Data: 31/12/2025
+Assunto: Resolução de erro "referencia é null" no Checkout
+================================================================================
+
+Prezada equipe,
+
+Identificamos a causa raiz das falhas reportadas no checkout para o método de 
+pagamento REFERENCIA (ATM). Embora o backend esteja processando as ordens e 
+enviando os SMS corretamente, o frontend está interrompendo o fluxo com erro.
+
+DIAGNÓSTICO:
+1. O backend processa o pedido e gera a referência bancária com sucesso.
+2. No objeto de resposta enviado ao frontend, os dados da referência estão 
+   sendo mapeados para campos que o componente de interface não está lendo 
+   corretamente (ex: o número da referência consta no campo de ID de pagamento).
+3. O frontend valida a presença de um campo específico de "referência" e, ao 
+   encontrá-lo nulo/vazio, dispara uma exceção de "Erro ao gerar referência", 
+   mesmo que o pedido já tenha sido criado no banco de dados.
+4. Isso gera um loop de retentativas (Retries) desnecessárias e erros de CORS.
+
+RECOMENDAÇÕES DE RESOLUÇÃO:
+
+1. MAPEAMENTO CORRETO DO PAYLOAD (IMPORTANTE):
+   O campo que contém o número da referência bancária (ATM) é "referenciaPagamento". 
+   Atualmente, o frontend parece estar tentando ler uma propriedade chamada 
+   "referencia" (que não existe no DTO de resposta), resultando no erro de 
+   valor nulo.
+
+ESTRUTURA DO JSON DE RESPOSTA (EXEMPLO REAL):
+--------------------------------------------------------------------------------
+{
+  "id": "14891c31-629b-447c-acc8-6c4dcdd9382f",
+  "clientRequestId": "ART-251231-QQS",
+  "status": "PENDING",
+  "paymentId": "003032689",
+  "referenciaPagamento": "003032689",
+  "entidade": "11424",
+  "metodoPagamento": "REFERENCIA",
+  "mensagem": "Pagamento criado AppyPay"
+}
+--------------------------------------------------------------------------------
+
+2. REVISÃO DO MAPEAMENTO DE DADOS:
+   Verifiquem a estrutura do objeto retornado pelo endpoint de checkout. É 
+   necessário ajustar o componente visual para buscar o número da referência 
+   no campo correto enviado pelo backend (validar se o valor está em 
+   'paymentId' ou dentro do objeto de resposta do provedor).
+
+2. ESTADO DE SUCESSO DO PEDIDO:
+   Caso o ID do pedido seja retornado com sucesso, o frontend não deve tratar 
+   a ausência da string de referência como um erro fatal de sistema. Se o 
+   pedido existe e o status é "PENDING", o fluxo deve prosseguir para a tela 
+   de sucesso/instruções.
+
+3. TRATAMENTO DE ERROS E RETENTATIVAS:
+   Evitem disparar o fluxo de "RetryBackoff" para erros lógicos de mapeamento. 
+   Isso está causando duplicidade de tentativas de rede e bloqueios de CORS 
+   que poluem os logs de monitoramento.
+
+4. FEEDBACK AO USUÁRIO:
+   Em caso de demora na resposta da referência, priorizem exibir que o pedido 
+   foi "Registrado com Sucesso" e que os dados de pagamento serão reforçados 
+   via SMS, evitando que o usuário tente comprar o mesmo bilhete várias vezes.
+
+O backend já está estável e entregando as notificações. O ajuste no frontend 
+é essencial para sincronizar a experiência do usuário com o sucesso da 
+operação no servidor.
+
+Atenciosamente,
+Equipe Backend / Qoder Assistant
+================================================================================

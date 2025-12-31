@@ -117,24 +117,28 @@
           </p>
         </div>
       </div>
-
-      <div class="pi-status">
-        <AtLoader size="sm" />
-        <span>Aguardando confirmação do pagamento...</span>
-      </div>
     </div>
 
     <!-- Informações adicionais -->
     <div class="pi-footer">
-      <AtIcon name="info" />
-      <div>
-        <p>
-          <strong>Importante:</strong> Não feche esta página. Você será notificado
-          automaticamente quando o pagamento for confirmado.
-        </p>
-        <p class="pi-support">
-          Precisa de ajuda? Entre em contato: <strong>925 813 939</strong>
-        </p>
+      <div class="pi-footer-info">
+        <AtIcon name="info" />
+        <div>
+          <p>
+            <strong>Atenção:</strong> Os dados de pagamento foram enviados por SMS. 
+            Assim que o pagamento for confirmado, você receberá o seu bilhete eletrónico 
+            também via SMS.
+          </p>
+          <p class="pi-support">
+            Precisa de ajuda? Entre em contato: <strong>925 813 939</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="pi-actions">
+        <AtButton variant="primary" @click="$emit('buyAnother')">
+          Comprar outro bilhete
+        </AtButton>
       </div>
     </div>
   </div>
@@ -144,6 +148,7 @@
 import { ref, computed } from 'vue';
 import AtIcon from '../../../components/AtIcon.vue';
 import AtLoader from '../../../components/AtLoader.vue';
+import AtButton from '../../../components/AtButton.vue';
 import { formatKwanza, formatTelefone } from '../utils/validators';
 import type { PedidoBackendResponse } from '../types/pedido.types';
 
@@ -153,6 +158,10 @@ const props = defineProps<{
   metodoPagamento?: 'GPO' | 'REFERENCIA';
   referenciaOverride?: string;
   entidadeOverride?: string;
+}>();
+
+const emit = defineEmits<{
+  buyAnother: [];
 }>();
 
 const copied = ref(false);
@@ -170,6 +179,7 @@ const referencia = computed(() => {
     p?.referencia,
     p?.paymentReference,
     p?.referenciaPagamento,
+    p?.paymentId,
     p?.ref,
   ].filter(Boolean) as string[];
 
@@ -444,11 +454,17 @@ const copyToClipboard = async (text: string) => {
 
 .pi-footer {
   display: flex;
-  gap: var(--spacing-2, 0.5rem);
-  padding: var(--spacing-3, 1rem);
+  flex-direction: column;
+  gap: var(--spacing-4, 1.5rem);
+  padding: var(--spacing-4, 1.5rem);
   background: var(--color-warning-light, #fef3c7);
   border-radius: var(--radius-md, 8px);
-  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-left: 4px solid var(--color-warning, #f59e0b);
+}
+
+.pi-footer-info {
+  display: flex;
+  gap: var(--spacing-2, 0.5rem);
 }
 
 .pi-footer p {
@@ -456,6 +472,13 @@ const copyToClipboard = async (text: string) => {
   font-size: var(--font-size-sm, 0.875rem);
   color: var(--color-text-primary, #1a1a1a);
   line-height: 1.5;
+}
+
+.pi-actions {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(245, 158, 11, 0.2);
+  padding-top: var(--spacing-4, 1.5rem);
 }
 
 .pi-support {

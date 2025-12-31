@@ -28,6 +28,8 @@ export function getPedidoData(response: CheckoutResponse): Pedido {
     paymentProvider: response.paymentProvider,
     paymentId: response.paymentId,
     reservaId: response.reservaId,
+    referenciaPagamento: response.referenciaPagamento,
+    entidade: response.entidade,
   } as Pedido;
 }
 
@@ -77,14 +79,22 @@ export function getMetodoPagamento(response: CheckoutResponse): string {
 export function getReferenciaPagamento(response: CheckoutResponse): string {
   const pedido = getPedidoData(response);
   const pagamento = getPagamentoInfo(response);
-  return pagamento?.referencia || pedido.referencia || '';
+  return (
+    pagamento?.referenciaPagamento ||
+    pagamento?.referencia ||
+    pedido.referenciaPagamento ||
+    pedido.referencia ||
+    pedido.paymentId ||
+    ''
+  );
 }
 
 /**
  * Obtém entidade de pagamento (para REFERENCIA)
  */
 export function getEntidadePagamento(response: CheckoutResponse): string {
+  const pedido = getPedidoData(response);
   const pagamento = getPagamentoInfo(response);
-  return pagamento?.entidade || '';
+  return pagamento?.entidade || pedido.entidade || '';
 }
 

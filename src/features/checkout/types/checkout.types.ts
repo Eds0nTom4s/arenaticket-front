@@ -28,6 +28,7 @@ export interface CheckoutRequest {
  */
 export interface PagamentoInfo {
   referencia: string;
+  referenciaPagamento?: string;
   entidade?: string;
   metodoPagamento: MetodoPagamento;
   statusPagamento: StatusPagamento;
@@ -40,6 +41,8 @@ export interface Pedido {
   id: string;
   clientRequestId: string;
   referencia?: string;
+  referenciaPagamento?: string;
+  entidade?: string;
   status: StatusPedido;
   valorTotal?: number;
   total?: number; // Backend usa 'total' ao invés de 'valorTotal'
@@ -70,6 +73,8 @@ export interface CheckoutResponse {
   paymentProvider?: string;
   paymentId?: string | null;
   reservaId?: string;
+  referenciaPagamento?: string;
+  entidade?: string;
 }
 
 /**

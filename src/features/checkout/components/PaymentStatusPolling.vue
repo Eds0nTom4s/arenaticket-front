@@ -13,8 +13,9 @@
       :pedido="pedido"
       :telefone="telefone"
       :metodo-pagamento="metodoPagamento"
-      :referencia-override="lastResponse?.referencia"
-      :entidade-override="lastResponse?.entidade"
+      :referencia-override="lastResponse ? getReferenciaPagamento(lastResponse as any) : undefined"
+      :entidade-override="lastResponse ? getEntidadePagamento(lastResponse as any) : undefined"
+      @buy-another="$emit('close')"
     />
 
     <!-- Erro -->
@@ -38,6 +39,7 @@ import AtButton from '../../../components/AtButton.vue';
 import PaymentInstructions from './PaymentInstructions.vue';
 import TicketDisplay from './TicketDisplay.vue';
 import { usePaymentStatus, PAYMENT_TIMEOUTS } from '../hooks/usePaymentStatus';
+import { getReferenciaPagamento, getEntidadePagamento } from '../utils/checkoutHelpers';
 import type { MetodoPagamento } from '../types/checkout.types';
 import type { PedidoBackendResponse } from '../types/pedido.types';
 
@@ -110,9 +112,9 @@ const retry = () => {
   startPolling({
     pedidoId: props.pedido.id,
     clientRequestId: props.pedido.clientRequestId,
-    // tentativas alternativas se existirem
-    referencia: (props.pedido as any)?.referencia,
-    reservaId: (props.pedido as any)?.reservaId,
+    referencia: props.pedido.referencia,
+    referenciaPagamento: props.pedido.referenciaPagamento,
+    reservaId: props.pedido.reservaId,
   });
 };
 
@@ -129,8 +131,9 @@ onMounted(() => {
   startPolling({
     pedidoId: props.pedido.id,
     clientRequestId: props.pedido.clientRequestId,
-    referencia: (props.pedido as any)?.referencia,
-    reservaId: (props.pedido as any)?.reservaId,
+    referencia: props.pedido.referencia,
+    referenciaPagamento: props.pedido.referenciaPagamento,
+    reservaId: props.pedido.reservaId,
   });
 });
 </script>

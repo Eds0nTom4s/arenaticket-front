@@ -15,6 +15,7 @@ export interface PedidoBackendResponse {
   paymentId: string | null;
   reservaId: string;
   referencia?: string;
+  referenciaPagamento?: string;
   entidade?: string;
   mensagem?: string;
   createdAt?: string;
