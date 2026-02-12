@@ -75,17 +75,17 @@
         </div>
 
         <!-- Após criar pedido: render direto baseado no status -->
-        <div v-else-if="checkoutResult">
+        <div v-else-if="checkoutResult || isRetrying">
           <!-- Sucesso imediato (GPO) com bilhetes -->
           <TicketDisplay
-            v-if="checkoutResult.status === 'PAID' && bilhetesInstantaneos.length > 0"
+            v-if="checkoutResult?.status === 'PAID' && bilhetesInstantaneos.length > 0"
             :bilhetes="[...bilhetesInstantaneos]"
             @close="handleClose"
           />
 
           <!-- Falha imediata (GPO ou erro de pagamento) -->
           <PaymentFailed
-            v-else-if="checkoutResult.status === 'FAILED' || isRetrying"
+            v-else-if="(checkoutResult?.status === 'FAILED') || isRetrying"
             :mensagem="(checkoutResult as any)?.mensagem"
             :referencia="(checkoutResult as any)?.referencia"
             :loading="checkoutLoading"
@@ -96,7 +96,7 @@
 
           <!-- Pendente (REFERENCIA) - exibir dados para pagar no ATM -->
           <PaymentInstructions
-            v-else
+            v-else-if="checkoutResult"
             :pedido="checkoutResult"
             :telefone="buyerInfo.telefone"
             :metodo-pagamento="buyerInfo.metodo"
