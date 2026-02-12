@@ -85,9 +85,9 @@
 
           <!-- Falha imediata (GPO ou erro de pagamento) -->
           <PaymentFailed
-            v-else-if="checkoutResult.status === 'FAILED'"
-            :mensagem="(checkoutResult as any).mensagem"
-            :referencia="(checkoutResult as any).referencia"
+            v-else-if="checkoutResult.status === 'FAILED' || isRetrying"
+            :mensagem="(checkoutResult as any)?.mensagem"
+            :referencia="(checkoutResult as any)?.referencia"
             :loading="checkoutLoading"
             :show-switch-option="buyerInfo.metodo === 'GPO'"
             @retry="retryCheckout"
@@ -206,6 +206,7 @@ const buyerInfo = ref({
 });
 const availableLotes = ref<Lote[]>([]);
 const pedidoCriado = ref(false);
+const isRetrying = ref(false); // Track retry state to keep PaymentFailed visible
 
 // Hooks
 const { generateKey, resetKey } = useIdempotency();
@@ -287,6 +288,7 @@ const canSwitchToReferencia = computed(() => {
 
 function switchToReferencia() {
   buyerInfo.value.metodo = 'REFERENCIA';
+  isRetrying.value = false; // Reset retry state when switching payment method
   resetCheckout();
   // Voltar para etapa de pagamento para confirmar novamente
   currentStep.value = 2;
@@ -316,11 +318,15 @@ async function confirmPurchase() {
     
     checkoutResult.value = result;
     pedidoCriado.value = true;
+    isRetrying.value = false; // Clear retry state on success
 
     console.log('[CheckoutWizard] Pedido criado com sucesso:', result);
 
   } catch (error: any) {
     console.error('[CheckoutWizard] Erro ao criar pedido:', error);
+    
+    // Clear retry state on error
+    isRetrying.value = false;
     
     // Resetar chave apenas se não for erro retryable
     if (!error.isRetryable) {
@@ -339,6 +345,7 @@ function handleClose() {
   buyerInfo.value = { nome: '', telefone: '', email: '', metodo: 'REFERENCIA' };
   pedidoCriado.value = false;
   checkoutResult.value = null;
+  isRetrying.value = false; // Reset retry state on close
   resetKey();
   emit('close');
 }
@@ -370,6 +377,7 @@ onUnmounted(() => {
 
 function retryCheckout() {
   // Recria o pedido imediatamente com uma NOVA chave idempotente, mantendo os dados
+  isRetrying.value = true; // Set retry state to keep PaymentFailed visible
   pedidoCriado.value = false;
   checkoutResult.value = null;
   // Permanecemos no step 3 e reusamos confirmPurchase para gerar um novo pedido
