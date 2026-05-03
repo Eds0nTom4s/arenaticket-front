@@ -1,7 +1,18 @@
 <template>
   <BaseLayout>
-    <h1 class="at-home-title">Bilhetes Disponíveis</h1>
-    <div class="at-home-grid">
+    <h1 v-if="!loading && eventos.length > 0" class="at-home-title">Bilhetes Disponíveis</h1>
+    
+    <!-- Mensagem quando não há eventos -->
+    <div v-if="!loading && eventos.length === 0" class="at-empty-state">
+      <div class="at-empty-icon">🎫</div>
+      <h2 class="at-empty-title">Nenhum evento disponível no momento</h2>
+      <p class="at-empty-message">
+        Estamos preparando eventos incríveis para você! Volte em breve para conferir as novidades.
+      </p>
+    </div>
+
+    <!-- Grid de bilhetes -->
+    <div v-else class="at-home-grid">
       <TicketCard
         v-for="evento in eventos"
         :key="evento.id"
@@ -9,6 +20,7 @@
         @comprar="abrirCheckout(evento)"
       />
     </div>
+
     <CheckoutWizard
       v-if="modalOpen"
       :evento="eventoSelecionado"
@@ -23,7 +35,7 @@
       </template>
       {{ toast.message }}
     </AtToast>
-    <AtLoader v-if="loading" label="Processando pagamento..." />
+    <AtLoader v-if="loading" label="Carregando eventos disponíveis..." />
   </BaseLayout>
 </template>
 
@@ -94,6 +106,39 @@ onMounted(async () => {
   margin-bottom: var(--space-lg);
   text-align: center;
 }
+
+.at-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-xxl) var(--space-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.at-empty-icon {
+  font-size: 5rem;
+  margin-bottom: var(--space-lg);
+  opacity: 0.5;
+}
+
+.at-empty-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-md);
+}
+
+.at-empty-message {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
 .at-home-grid {
   display: grid;
   grid-template-columns: 1fr;

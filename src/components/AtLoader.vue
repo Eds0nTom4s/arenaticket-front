@@ -21,20 +21,37 @@ const props = defineProps({
   min-height: 60px;
 }
 .at-loader__circle {
-  width: 36px;
-  height: 36px;
-  border: 4px solid var(--color-primary);
-  border-top: 4px solid var(--color-neutral-300);
+  width: 48px;
+  height: 48px;
+  border: 5px solid rgba(0, 27, 51, 0.1);
+  border-top: 5px solid var(--color-primary);
+  border-right: 5px solid var(--color-secondary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  box-shadow: 0 2px 10px rgba(0, 27, 51, 0.1);
 }
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% { 
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% { 
+    transform: rotate(360deg);
+    opacity: 1;
+  }
 }
 .at-loader__label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
+  font-weight: 500;
   color: var(--color-primary-dark);
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 </style>

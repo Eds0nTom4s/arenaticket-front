@@ -559,9 +559,12 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 
 <style scoped>
 .ticket-display {
-  padding: var(--spacing-4, 1.5rem);
+  padding: var(--spacing-2, 0.5rem);
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .td-carousel {
@@ -621,7 +624,8 @@ const shareWhatsApp = (bilhete: Bilhete) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-6, 2rem);
-  margin-bottom: var(--spacing-6, 2rem);
+  margin-bottom: var(--spacing-3, 1rem);
+  padding: var(--spacing-2, 0.5rem);
 }
 
 /* Modelo térmico */
@@ -775,8 +779,9 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 .bp-actions {
   display: flex;
   gap: var(--spacing-3, 1rem);
-  margin: var(--spacing-6, 2rem) auto;
+  margin: var(--spacing-4, 1.5rem) auto;
   max-width: 400px;
+  padding: 0 var(--spacing-2, 0.5rem);
 }
 
 .bp-actions button {
@@ -785,7 +790,16 @@ const shareWhatsApp = (bilhete: Bilhete) => {
 
 .bp-footer {
   text-align: center;
-  margin-top: var(--spacing-6, 2rem);
+  margin-top: var(--spacing-3, 1rem);
+  padding: 0 var(--spacing-2, 0.5rem);
+  margin-bottom: var(--spacing-3, 1rem);
+}
+
+.td-actions-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--spacing-3, 1rem);
 }
 
 @media (max-width: 768px) {

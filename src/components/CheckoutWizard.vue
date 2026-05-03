@@ -10,7 +10,7 @@
       :current-step="currentStep" 
     />
 
-    <div class="cw-content">
+    <div class="cw-content" :class="{ 'cw-content--ticket-display': showingTickets }">
       <!-- Etapa 1: Seleção de Lote -->
       <StepLoteSelection
         v-if="currentStep === 0"
@@ -244,6 +244,13 @@ const orderSummary = computed(() => {
   };
 });
 
+// Computed para detectar quando estamos mostrando bilhetes
+const showingTickets = computed(() => {
+  return pedidoCriado.value && 
+         checkoutResult.value?.status === 'PAID' && 
+         bilhetesInstantaneos.value.length > 0;
+});
+
 // Validação da etapa
 const isStepValid = computed(() => {
   switch (currentStep.value) {
@@ -387,6 +394,14 @@ function retryCheckout() {
   margin-bottom: 20px;
   overflow-y: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modo de exibição de bilhetes - remove restrições de altura e scroll */
+.cw-content--ticket-display {
+  max-height: none;
+  overflow-y: visible;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 /* Scroll estilizado */

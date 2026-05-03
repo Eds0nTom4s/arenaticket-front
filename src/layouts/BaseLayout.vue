@@ -1,7 +1,7 @@
 <template>
   <div class="at-layout">
     <header class="at-header">
-      <div class="at-logo">ArenaTicket</div>
+      <router-link to="/" class="at-logo">ArenaTicket</router-link>
       <button class="at-menu-btn" aria-label="Abrir menu" @click="openMenu = true">
         <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect y="4" width="24" height="2" rx="1" fill="currentColor"/><rect y="11" width="24" height="2" rx="1" fill="currentColor"/><rect y="18" width="24" height="2" rx="1" fill="currentColor"/></svg>
       </button>
@@ -10,8 +10,8 @@
           <button class="at-menu-close" aria-label="Fechar menu" @click="openMenu = false">×</button>
           <ul>
             <li><a href="#">Meus Bilhetes</a></li>
-            <li><a href="https://admin.arenaticket.gdse.ao" target="_blank">Administração</a></li>
-            <li><a href="#">Ajuda</a></li>
+            <li><a href="https://bilhetes.admin.gdse.ao" target="_blank">Administração</a></li>
+            <li><router-link to="/ajuda" @click="openMenu = false">Ajuda</router-link></li>
           </ul>
         </nav>
       </aside>
@@ -56,6 +56,11 @@ const openMenu = ref(false);
   color: var(--color-primary);
   font-weight: 700;
   letter-spacing: 1px;
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+.at-logo:hover {
+  opacity: 0.8;
 }
 .at-menu-btn {
   background: none;
